@@ -1,7 +1,8 @@
 class PointController(object):
 
-    def __init__(self):
+    def __init__(self,move_point_callback):
         self.points = None
+        self.move_point_callback = move_point_callback
 
     def reset(self):
         for point_id in self.points:
@@ -49,6 +50,7 @@ class PointController(object):
             return
         print(f"--- Move point {point.point_id} to {orientation}")
         point.orientation = orientation
+        self.move_point_callback(point.point_id,orientation)
 
     def set_point_reserved(self, point):
         print(f"--- Set point {point.point_id} to reserved")

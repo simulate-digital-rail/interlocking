@@ -1,10 +1,9 @@
-import traci
-
 
 class SignalController(object):
 
-    def __init__(self):
+    def __init__(self,set_signal_state_callback):
         self.signals = None
+        self.set_signal_state_callback = set_signal_state_callback
 
     def reset(self):
         for signal in self.signals:
@@ -16,15 +15,13 @@ class SignalController(object):
     def set_signal_halt(self, signal):
         print(f"--- Set signal {signal.id} to halt")
         signal.state = "halt"
-        if signal.wirkrichtung == "in":
-            traci.trafficlight.setRedYellowGreenState(signal.id, "rG")
-        else:
-            traci.trafficlight.setRedYellowGreenState(signal.id, "Gr")
+        self.set_signal_state_callback(signal.id,"halt",signal.wirkrichtung)
+       
 
     def set_signal_go(self, signal):
         print(f"--- Set signal {signal.id} to go")
         signal.state = "go"
-        traci.trafficlight.setRedYellowGreenState(signal.id, "GG")
+        self.set_signal_state_callback(signal.id,"go",signal.wirkrichtung)
 
     def print_state(self):
         print("State of Signals:")

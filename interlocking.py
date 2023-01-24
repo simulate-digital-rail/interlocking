@@ -1,4 +1,3 @@
-import traci
 from planprohelper import PlanProHelper
 from interlockingcontroller import PointController, SignalController, TrackController, TrainDetectionController
 from model import Point, Track
@@ -6,17 +5,17 @@ from model import Point, Track
 
 class Interlocking(object):
 
-    def __init__(self, plan_pro_file_name):
+    def __init__(self, plan_pro_file_name,move_point_callback,set_signal_state_callback):
         self.plan_pro_helper = PlanProHelper(plan_pro_file_name)
-        self.point_controller = PointController()
-        self.signal_controller = SignalController()
+        self.point_controller = PointController(move_point_callback)
+        self.signal_controller = SignalController(set_signal_state_callback)
         self.track_controller = TrackController(self, self.point_controller, self.signal_controller)
         self.train_detection_controller = TrainDetectionController(self.track_controller)
         self.stations = None
         self.routes = []
         self.active_routes = []
 
-    def prepare(self):
+    def prepare(self,route_ids_in_sumo):
         signals = self.plan_pro_helper.get_all_signals()
         self.signal_controller.signals = signals
 
@@ -56,7 +55,6 @@ class Interlocking(object):
         self.track_controller.tracks = tracks
 
         self.routes = self.plan_pro_helper.get_all_routes(signals)
-        route_ids_in_sumo = traci.route.getIDList()
         for route in self.routes:
             for route_id_in_sumo in route_ids_in_sumo:
                 if route.id == route_id_in_sumo:
