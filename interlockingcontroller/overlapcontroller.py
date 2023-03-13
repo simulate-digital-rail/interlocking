@@ -8,10 +8,8 @@ class OverlapController(object):
         self.track_controller = track_controller
         self.point_controller = point_controller
 
-    def get_overlaps_of_route(self, route, train=None):
-        max_speed = 70
-        if train is not None:
-            max_speed = train.max_speed
+    def get_overlaps_of_route(self, route):
+        max_speed = route.get_max_speed_of_route()
         missing_length_of_overlap = 0
         if max_speed <= 30:
             missing_length_of_overlap = 0
