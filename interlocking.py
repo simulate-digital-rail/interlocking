@@ -1,4 +1,3 @@
-from planprohelper import PlanProHelper
 from interlockingcontroller import PointController, SignalController, TrackController, TrainDetectionController
 from model import Point, Track, Signal, Route
 
@@ -55,7 +54,6 @@ class Interlocking(object):
         self.track_controller.tracks = tracks
 
         # Routes
-        routes = dict()
         for yaramo_route_uuid in yaramo_topoloy.routes:
             yaramo_route = yaramo_topoloy.routes[yaramo_route_uuid]
             route = Route(yaramo_route)
@@ -68,7 +66,7 @@ class Interlocking(object):
                 route_tracks.append(tracks[yaramo_edge.uuid[-5:]])
             route.tracks = route_tracks
 
-            routes[yaramo_route_uuid] = route
+            self.routes.append(route)
 
     def reset(self):
         self.point_controller.reset()
@@ -85,12 +83,12 @@ class Interlocking(object):
         for active_route in self.active_routes:
             print(active_route.to_string())
 
-    def set_route(self, route, train):
+    def set_route(self, route):
         if not self.can_route_be_set(route):
             return False
         self.active_routes.append(route)
         self.point_controller.set_route(route)
-        self.track_controller.set_route(route, train)
+        self.track_controller.set_route(route)
         self.signal_controller.set_route(route)
         return True
 
