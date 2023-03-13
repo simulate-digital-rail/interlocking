@@ -1,3 +1,5 @@
+from yaramo.model import SignalDirection
+
 class Track(object):
 
     def __init__(self, yaramo_edge):
@@ -32,3 +34,26 @@ class Track(object):
             if signal.yaramo_signal.uuid == self.signals[i].yaramo_signal.uuid:
                 return i
         return -1
+
+    def get_segments_of_range(self, from_index, to_index):
+        result = []
+        for i in range(from_index, to_index):
+            result.append(f"{self.base_track_id}-{i}")
+        return result
+
+    def get_all_segments_of_track(self, track):
+        return track.get_segments_of_range(0, len(track.signals)+1)
+
+    def get_segments_from_signal(self, signal):
+        pos_in_track = self.get_position_of_signal(signal)
+        if signal.yaramo_signal.direction == SignalDirection.IN:
+            return signal.track.get_segments_of_range(pos_in_track + 1, len(signal.track.signals) + 1)
+        else:
+            return signal.track.get_segments_of_range(0, pos_in_track + 1)
+
+    def get_segments_to_signal(self, signal):
+        pos_in_track = self.get_position_of_signal(signal)
+        if signal.wirkrichtung == SignalDirection.IN:
+            return signal.track.get_segments_of_range(0, pos_in_track + 1)
+        else:
+            return signal.track.get_segments_of_range(pos_in_track + 1, len(signal.track.signals) + 1)
