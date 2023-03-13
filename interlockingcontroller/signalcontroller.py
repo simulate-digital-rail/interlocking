@@ -1,7 +1,7 @@
 
 class SignalController(object):
 
-    def __init__(self,set_signal_state_callback):
+    def __init__(self, set_signal_state_callback):
         self.signals = None
         self.set_signal_state_callback = set_signal_state_callback
 
@@ -15,13 +15,13 @@ class SignalController(object):
     def set_signal_halt(self, signal):
         print(f"--- Set signal {signal.id} to halt")
         signal.state = "halt"
-        self.set_signal_state_callback(signal.id,"halt",signal.wirkrichtung)
+        self.set_signal_state_callback(signal.id, "halt", signal.wirkrichtung)
        
 
     def set_signal_go(self, signal):
         print(f"--- Set signal {signal.id} to go")
         signal.state = "go"
-        self.set_signal_state_callback(signal.id,"go",signal.wirkrichtung)
+        self.set_signal_state_callback(signal.id, "go", signal.wirkrichtung)
 
     def print_state(self):
         print("State of Signals:")

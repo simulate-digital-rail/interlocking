@@ -1,12 +1,11 @@
 from planprohelper import PlanProHelper
 from interlockingcontroller import PointController, SignalController, TrackController, TrainDetectionController
-from model import Point, Track
+from model import Point, Track, Signal, Route
 
 
 class Interlocking(object):
 
-    def __init__(self, plan_pro_file_name,move_point_callback,set_signal_state_callback):
-        self.plan_pro_helper = PlanProHelper(plan_pro_file_name)
+    def __init__(self, move_point_callback, set_signal_state_callback):
         self.point_controller = PointController(move_point_callback)
         self.signal_controller = SignalController(set_signal_state_callback)
         self.track_controller = TrackController(self, self.point_controller, self.signal_controller)
@@ -15,51 +14,62 @@ class Interlocking(object):
         self.routes = []
         self.active_routes = []
 
-    def prepare(self,route_ids_in_sumo):
-        signals = self.plan_pro_helper.get_all_signals()
-        self.signal_controller.signals = signals
-
+    def prepare(self, yaramo_topoloy):
+        # Nodes
         points = dict()
-        for top_knoten in self.plan_pro_helper.get_all_top_knoten():
-            uuid = top_knoten.Identitaet.Wert
-            point_obj = Point(uuid)
-            points[point_obj.point_id] = point_obj
+        for node_uuid in yaramo_topoloy.nodes:
+            node = yaramo_topoloy.nodes[node_uuid]
+            point = Point(node)
+            points[point.point_id] = point
         self.point_controller.points = points
 
+        # Signals
+        signals = dict()
+        for yaramo_signal_uuid in yaramo_topoloy.signals:
+            yaramo_signal = yaramo_topoloy.signals[yaramo_signal_uuid]
+            signal = Signal(yaramo_signal)
+            signals[yaramo_signal.uuid] = signal
+        self.signal_controller.signals = signals
+
+        # Tracks
         tracks = dict()
-        for top_kante in self.plan_pro_helper.get_all_top_kanten():
-            uuid = top_kante.Identitaet.Wert
-            track = Track(uuid)
-            track.total_length = float(top_kante.TOP_Kante_Allg.TOP_Laenge.Wert)
+        for edge_uuid in yaramo_topoloy.edges:
+            edge = yaramo_topoloy.edges[edge_uuid]
+            track = Track(edge)
 
-            id_top_knoten_a = top_kante.ID_TOP_Knoten_A.Wert
-            id_top_knoten_b = top_kante.ID_TOP_Knoten_B.Wert
-
-            point_a = points[id_top_knoten_a[-5:]]
-            point_b = points[id_top_knoten_b[-5:]]
-
+            point_a = points[edge.node_a.uuid[-5:]]
+            point_b = points[edge.node_a.uuid[-5:]]
             track.left_point = point_a
             track.right_point = point_b
+            point_a.connect_track(track)
+            point_b.connect_track(track)
 
             signals_of_track = []
             for signal in signals:
-                if signal.top_kante_uuid == uuid:
+                if signal.yaramo_signal.edge.uuid == edge.uuid:
                     signals_of_track.append(signal)
                     signal.track = track
             track.set_signals(signals_of_track)
 
-            point_a.set_track_by_anschluss(track, top_kante.TOP_Kante_Allg.TOP_Anschluss_A.Wert)
-            point_b.set_track_by_anschluss(track, top_kante.TOP_Kante_Allg.TOP_Anschluss_B.Wert)
-
             tracks[track.base_track_id] = track
+
         self.track_controller.tracks = tracks
 
-        self.routes = self.plan_pro_helper.get_all_routes(signals)
-        for route in self.routes:
-            for route_id_in_sumo in route_ids_in_sumo:
-                if route.id == route_id_in_sumo:
-                    route.available_in_sumo = True
-            route.sort_tracks_to_visit(points, tracks)
+        # Routes
+        routes = dict()
+        for yaramo_route_uuid in yaramo_topoloy.routes:
+            yaramo_route = yaramo_topoloy.routes[yaramo_route_uuid]
+            route = Route(yaramo_route)
+            route.start_signal = signals[yaramo_route.start_signal.uuid]
+            route.end_signal = signals[yaramo_route.end_signal.uuid]
+
+            yaramo_edges_in_order = yaramo_route.get_edges_in_order()
+            route_tracks = []
+            for yaramo_edge in yaramo_edges_in_order:
+                route_tracks.append(tracks[yaramo_edge.uuid[-5:]])
+            route.tracks = route_tracks
+
+            routes[yaramo_route_uuid] = route
 
     def reset(self):
         self.point_controller.reset()
