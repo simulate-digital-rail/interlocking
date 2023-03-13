@@ -10,7 +10,6 @@ class Interlocking(object):
         self.signal_controller = SignalController(set_signal_state_callback)
         self.track_controller = TrackController(self, self.point_controller, self.signal_controller)
         self.train_detection_controller = TrainDetectionController(self.track_controller)
-        self.stations = None
         self.routes = []
         self.active_routes = []
 
