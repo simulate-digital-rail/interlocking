@@ -4,11 +4,15 @@ from model import Point, Track, Signal, Route
 
 class Interlocking(object):
 
-    def __init__(self, move_point_callback, set_signal_state_callback):
-        self.point_controller = PointController(move_point_callback)
-        self.signal_controller = SignalController(set_signal_state_callback)
+    def __init__(self, infrastructure_providers):
+        if not isinstance(infrastructure_providers, list):
+            infrastructure_providers = [infrastructure_providers]
+        self.infrastructure_providers = infrastructure_providers
+
+        self.point_controller = PointController(self.infrastructure_providers)
+        self.signal_controller = SignalController(self.infrastructure_providers)
         self.track_controller = TrackController(self, self.point_controller, self.signal_controller)
-        self.train_detection_controller = TrainDetectionController(self.track_controller)
+        self.train_detection_controller = TrainDetectionController(self.track_controller, self.infrastructure_providers)
         self.routes = []
         self.active_routes = []
 

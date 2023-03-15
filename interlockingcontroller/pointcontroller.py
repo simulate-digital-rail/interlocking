@@ -1,8 +1,8 @@
 class PointController(object):
 
-    def __init__(self, move_point_callback):
+    def __init__(self, infrastructure_providers):
         self.points = None
-        self.move_point_callback = move_point_callback
+        self.infrastructure_providers = infrastructure_providers
 
     def reset(self):
         for point_id in self.points:
@@ -36,7 +36,8 @@ class PointController(object):
             return
         print(f"--- Move point {point.point_id} to {orientation}")
         point.orientation = orientation
-        self.move_point_callback(point.point_id, orientation)
+        for infrastructure_provider in self.infrastructure_providers:
+            infrastructure_provider.set_signal_state(point.yaramo_node, orientation)
 
     def set_point_reserved(self, point):
         print(f"--- Set point {point.point_id} to reserved")

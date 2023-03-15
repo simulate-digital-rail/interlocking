@@ -53,8 +53,7 @@ class Route(object):
         for i in range(0, len(self.tracks) - 1):
             first_track = self.tracks[i]
             second_track = self.tracks[i + 1]
-            #print(f"{first_track.base_track_id} {first_track.left_point.point_id}  {first_track.right_point.point_id} + {second_track.base_track_id} {second_track.left_point.point_id} {second_track.right_point.point_id}")
-
+            
             if first_track.left_point.does_point_connect_tracks(first_track, second_track):
                 point = first_track.left_point
             elif first_track.right_point.does_point_connect_tracks(first_track, second_track):
