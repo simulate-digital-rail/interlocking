@@ -21,15 +21,17 @@ class OverlapController(object):
         return None
 
     def can_overlap_be_reserved(self, overlap):
-        for base_track_id in overlap.segments:
-            track = self.track_controller.tracks[base_track_id]
-            for segment_id in overlap.segments[base_track_id]:
+        for track in overlap.segments:
+            for segment_id in overlap.segments[track]:
                 if track.state[segment_id] != "free" and track.state[segment_id] != "reserved-overlap":
                     return False
         for point in overlap.points:
             if point.state != "free" and point.state != "reserved-overlap":
                 return False
         return True
+
+    def can_any_overlap_be_reserved(self, route):
+        return self.get_first_reservable_overlap(route) is not None
 
     def reserve_segments_of_overlap(self, overlap):
         for track in overlap.segments:

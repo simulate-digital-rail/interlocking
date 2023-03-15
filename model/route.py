@@ -22,7 +22,7 @@ class Route(object):
         if len(self.tracks) == 0:
             raise ValueError("Route without tracks")
         if self.tracks[0].base_track_id == track.base_track_id:
-            return self.start_signal.wirkrichtung
+            return str(self.start_signal.yaramo_signal.direction).lower()
 
         for i in range(1, len(self.tracks)):
             cur_track = self.tracks[i]
@@ -44,7 +44,7 @@ class Route(object):
         pos_of_signal = last_track.get_position_of_signal(self.end_signal)
         if pos_of_signal == -1:
             raise ValueError("End signal not on last track")
-        if self.end_signal.wirkrichtung == "in":
+        if self.end_signal.yaramo_signal.direction == SignalDirection.IN:
             return f"{last_track.base_track_id}-{pos_of_signal}"
         return f"{last_track.base_track_id}-{pos_of_signal+1}"
 
@@ -53,8 +53,8 @@ class Route(object):
         for i in range(0, len(self.tracks) - 1):
             first_track = self.tracks[i]
             second_track = self.tracks[i + 1]
+            #print(f"{first_track.base_track_id} {first_track.left_point.point_id}  {first_track.right_point.point_id} + {second_track.base_track_id} {second_track.left_point.point_id} {second_track.right_point.point_id}")
 
-            point = None
             if first_track.left_point.does_point_connect_tracks(first_track, second_track):
                 point = first_track.left_point
             elif first_track.right_point.does_point_connect_tracks(first_track, second_track):
@@ -100,14 +100,8 @@ class Route(object):
                 get_segments_to_signal(self.end_signal)
         return result
 
-    def get_max_speed_of_route(self):
-        max_speed = -1
-        for track in self.tracks:
-            max_speed = max(max_speed, track.yaramo_edge.maximum_speed)
-        return max_speed
-
-    def get_overlaps_of_route(self, route):
-        max_speed = route.get_max_speed_of_route()
+    def get_overlaps_of_route(self):
+        max_speed = self.yaramo_route.maximum_speed
         if max_speed <= 30:
             missing_length_of_overlap = 0
         elif max_speed <= 40:
@@ -117,12 +111,12 @@ class Route(object):
         else:
             missing_length_of_overlap = 200
 
-        overlap_obj = Overlap(missing_length_of_overlap, route)
+        overlap_obj = Overlap(missing_length_of_overlap, self)
         if missing_length_of_overlap == 0:
             return [overlap_obj]
 
-        last_track = route.end_signal.track
-        segments_from_end_signal = last_track.get_segments_from_signal(route.end_signal)
+        last_track = self.end_signal.track
+        segments_from_end_signal = last_track.get_segments_from_signal(self.end_signal)
 
         for segment_id in segments_from_end_signal:
             overlap_obj.add_segment(last_track, segment_id)
@@ -130,7 +124,7 @@ class Route(object):
                 return [overlap_obj]
 
         # Current track is not enough
-        found_overlaps = self.get_overlaps_of_route_recursive(last_track, route.end_signal.yaramo_signal.direction,
+        found_overlaps = self.get_overlaps_of_route_recursive(last_track, self.end_signal.yaramo_signal.direction,
                                                               overlap_obj)
         full_overlaps = []
         longest_overlap = found_overlaps[0]
@@ -151,6 +145,8 @@ class Route(object):
             next_point = cur_track.left_point
         cur_overlap.points.append(next_point)
         successors = next_point.get_possible_successors(cur_track)
+        if len(successors) == 0:
+            return [cur_overlap]
         results = []
         for successor_track in successors:
             new_overlap = cur_overlap.duplicate()
@@ -174,4 +170,4 @@ class Route(object):
         return results
 
     def to_string(self):
-        return f"{self.start_signal.id} -> { self.end_signal.id}"
+        return f"{self.start_signal.yaramo_signal.name} -> { self.end_signal.yaramo_signal.name}"

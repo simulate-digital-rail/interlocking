@@ -14,20 +14,19 @@ class TrackController(object):
         for base_track_id in self.tracks:
             track = self.tracks[base_track_id]
             for segment_id in track.state:
-                self.free_segment_of_track(track, segment_id)
+                track.state[segment_id] = "free"
 
     def set_route(self, route):
         self.reserve_route(route)
 
     def can_route_be_set(self, route):
         segments = route.get_segments_of_route()
-        # Overlaps can be used by multiple trains in Germany, so no direct check here
         for track_base_id in segments:
             track = self.tracks[track_base_id]
             for segment_id in segments[track_base_id]:
                 if track.state[segment_id] != "free":
                     return False
-        return True
+        return self.overlap_controller.can_any_overlap_be_reserved(route)
 
     def do_two_routes_collide(self, route_1, route_2):
         segments_of_route_1 = {x for v in route_1.get_segments_of_route().values() for x in v}
@@ -35,14 +34,14 @@ class TrackController(object):
         if len(segments_of_route_1.intersection(segments_of_route_2)) > 0:
             return True
 
-        overlaps_of_route_1 = self.overlap_controller.get_overlaps_of_route(route_1)
+        overlaps_of_route_1 = route_1.get_overlaps_of_route()
         found_no_free_overlap_route_1 = True
         for overlap in overlaps_of_route_1:
             overlap_segments_of_route_1 = {x for v in overlap.segments.values() for x in v}
             if len(overlap_segments_of_route_1.intersection(segments_of_route_2)) == 0:
                 found_no_free_overlap_route_1 = False
                 break
-        overlaps_of_route_2 = self.overlap_controller.get_overlaps_of_route(route_2)
+        overlaps_of_route_2 = route_2.get_overlaps_of_route()
         found_no_free_overlap_route_2 = True
         for overlap in overlaps_of_route_2:
             overlap_segments_of_route_2 = {x for v in overlap.segments.values() for x in v}
@@ -76,7 +75,7 @@ class TrackController(object):
                     self.signal_controller.set_signal_halt(previous_signal)
             if pos_of_segment < len(track.signals):
                 next_signal = track.signals[pos_of_segment]
-                if next_signal.wirkrichtung == SignalDirection.GEGEN:
+                if next_signal.yaramo_signal.direction == SignalDirection.GEGEN:
                     self.signal_controller.set_signal_halt(next_signal)
 
     def free_segment_of_track(self, track, segment_id):

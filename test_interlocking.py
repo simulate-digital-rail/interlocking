@@ -1,36 +1,87 @@
-
+from planpro_importer.reader import PlanProReader
+from railwayroutegenerator.routegenerator import RouteGenerator
 from interlocking import Interlocking
+
 
 def test_01():
 
-    def move_point_callback(point_id,orientation):
+    def move_point_callback(point_id, orientation):
         print(f"Move Point {point_id} {orientation}")
 
-    
     def set_signal_state_callback(signal, state):
         print(f"Set Signal {signal.yaramo_signal.name} {state} {signal.yaramo_signal.direction} ")
 
-    interlocking = Interlocking('test/MVP.routen',move_point_callback,set_signal_state_callback)
-    #interlocking.stations = metadata_controller.stations
+    reader = PlanProReader("test/complex-example")
+    topology = reader.read_topology_from_plan_pro_file()
 
-    interlocking.prepare([])
+    # TODO: At the moment, the railway route generator can not calculate max speeds since the edges have no max speeds
+    outer_station_edges = ["88d820fc-95b4-408c-b418-a516877de139", "66adf559-7dd5-487f-bad7-8e256a8a8f44",
+                           "f438d162-b5c4-4c0c-9d73-f55fad294742", "61d57b1b-2ae2-4637-897b-abbab41b8e69",
+                           "f63e5398-f20c-47be-bbed-f7f8f8034bff"]
+    for edge_uuid in topology.edges:
+        edge = topology.edges[edge_uuid]
+        if edge_uuid in outer_station_edges:
+            edge.maximum_speed = 60
+        else:
+            edge.maximum_speed = 40
 
-    #for route in interlocking.routes:
-    #    print(route)
-    #    interlocking.set_route(route,"train")
+    generator = RouteGenerator(topology)
+    generator.generate_routes()
 
-    print("Found Routes:")
-    for route in interlocking.routes:
-        print(f"{route.to_string()}\t(ID: {route.id}; Available in SUMO: {route.available_in_sumo}; UUID: {route.route_uuid})")
-
-    for test_route in interlocking.routes:
-
-        assert interlocking.set_route(test_route, test_train) == True
-        
-        interlocking.free_route(test_route)
-            
-
+    interlocking = Interlocking(move_point_callback, set_signal_state_callback)
+    interlocking.prepare(topology)
     interlocking.print_state()
+
+    def set_route(_start_signal_name, _end_signal_name, _should_be_able_to_set):
+        for _route_uuid in topology.routes:
+            _route = topology.routes[_route_uuid]
+            if _route.start_signal.name == _start_signal_name and _route.end_signal.name == _end_signal_name:
+                _could_be_set = interlocking.set_route(_route)
+                assert (_could_be_set == _should_be_able_to_set)
+                interlocking.print_state()
+
+    def free_route(_start_signal_name, _end_signal_name):
+        for _route_uuid in topology.routes:
+            _route = topology.routes[_route_uuid]
+            if _route.start_signal.name == _start_signal_name and _route.end_signal.name == _end_signal_name:
+                interlocking.free_route(_route)
+                interlocking.print_state()
+
+    set_route("60BS1", "60BS2", True)
+
+    # "Drive" some train
+    print("Driving!")
+    tds = interlocking.train_detection_controller
+    tds.count_in("de139-1")
+    tds.count_in("de139-2")
+    tds.count_out("de139-1")
+    tds.count_in("94742-0")
+    tds.count_out("de139-2")
+    interlocking.print_state()
+    tds.count_in("b8e69-0")
+    tds.count_out("94742-0")
+    tds.count_out("b8e69-0")
+    interlocking.print_state()
+    free_route("60BS1", "60BS2")
+
+    set_route("60ES2", "60AS4", True)
+    set_route("60ES2", "60AS3", False)
+
+    interlocking.reset()
+
+    # Get conflicts:
+    for route_uuid_1 in topology.routes:
+        for route_uuid_2 in topology.routes:
+            if route_uuid_1 != route_uuid_2:
+                route_1 = topology.routes[route_uuid_1]
+                route_2 = topology.routes[route_uuid_2]
+                do_collide = interlocking.do_two_routes_collide(route_1, route_2)
+                print(f"{route_1.start_signal.name} -> {route_1.end_signal.name} and {route_2.start_signal.name} -> {route_2.end_signal.name}: collide? {do_collide}")
+
+            
+if __name__ == "__main__":
+    test_01()
+
 
    
 

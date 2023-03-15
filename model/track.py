@@ -22,7 +22,7 @@ class Track(object):
                                                             - sum_of_lengths_so_far
                 sum_of_lengths_so_far = sum_of_lengths_so_far + self.lengths[f"{self.base_track_id}-{i}"]
 
-        self.lengths[f"{self.base_track_id}-{len(self.signals)}"] = len(self.yaramo_edge) - sum_of_lengths_so_far
+        self.lengths[f"{self.base_track_id}-{len(self.signals)}"] = self.yaramo_edge.length - sum_of_lengths_so_far
 
     def get_position_of_segment(self, segment_id):
         if segment_id.endswith("-re"):
@@ -41,8 +41,8 @@ class Track(object):
             result.append(f"{self.base_track_id}-{i}")
         return result
 
-    def get_all_segments_of_track(self, track):
-        return track.get_segments_of_range(0, len(track.signals)+1)
+    def get_all_segments_of_track(self):
+        return self.get_segments_of_range(0, len(self.signals)+1)
 
     def get_segments_from_signal(self, signal):
         pos_in_track = self.get_position_of_signal(signal)
@@ -53,7 +53,7 @@ class Track(object):
 
     def get_segments_to_signal(self, signal):
         pos_in_track = self.get_position_of_signal(signal)
-        if signal.wirkrichtung == SignalDirection.IN:
+        if signal.yaramo_signal.direction == SignalDirection.IN:
             return signal.track.get_segments_of_range(0, pos_in_track + 1)
         else:
             return signal.track.get_segments_of_range(pos_in_track + 1, len(signal.track.signals) + 1)

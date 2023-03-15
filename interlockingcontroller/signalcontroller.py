@@ -13,16 +13,17 @@ class SignalController(object):
         self.set_signal_go(route.start_signal)
 
     def set_signal_halt(self, signal):
-        print(f"--- Set signal {signal.id} to halt")
+        print(f"--- Set signal {signal.yaramo_signal.name} to halt")
         signal.state = "halt"
         self.set_signal_state_callback(signal, "halt")
 
     def set_signal_go(self, signal):
-        print(f"--- Set signal {signal.id} to go")
+        print(f"--- Set signal {signal.yaramo_signal.name} to go")
         signal.state = "go"
         self.set_signal_state_callback(signal, "go")
 
     def print_state(self):
         print("State of Signals:")
-        for signal in self.signals:
+        for signal_uuid in self.signals:
+            signal = self.signals[signal_uuid]
             print(f"{signal.yaramo_signal.name}: {signal.state}")

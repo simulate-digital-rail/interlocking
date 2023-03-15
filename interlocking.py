@@ -36,14 +36,15 @@ class Interlocking(object):
             track = Track(edge)
 
             point_a = points[edge.node_a.uuid[-5:]]
-            point_b = points[edge.node_a.uuid[-5:]]
+            point_b = points[edge.node_b.uuid[-5:]]
             track.left_point = point_a
             track.right_point = point_b
             point_a.connect_track(track)
             point_b.connect_track(track)
 
             signals_of_track = []
-            for signal in signals:
+            for signal_uuid in signals:
+                signal = signals[signal_uuid]
                 if signal.yaramo_signal.edge.uuid == edge.uuid:
                     signals_of_track.append(signal)
                     signal.track = track
@@ -75,6 +76,7 @@ class Interlocking(object):
         self.active_routes = []
 
     def print_state(self):
+        print("##############")
         self.point_controller.print_state()
         self.track_controller.print_state()
         self.signal_controller.print_state()
@@ -82,26 +84,38 @@ class Interlocking(object):
         print("Active Routes:")
         for active_route in self.active_routes:
             print(active_route.to_string())
+        print("##############")
 
-    def set_route(self, route):
-        if not self.can_route_be_set(route):
+    def set_route(self, yaramo_route):
+        if not self.can_route_be_set(yaramo_route):
             return False
+        route = self.get_route_from_yaramo_route(yaramo_route)
         self.active_routes.append(route)
         self.point_controller.set_route(route)
         self.track_controller.set_route(route)
         self.signal_controller.set_route(route)
         return True
 
-    def can_route_be_set(self, route):
+    def can_route_be_set(self, yaramo_route):
+        route = self.get_route_from_yaramo_route(yaramo_route)
         can_be_set = self.track_controller.can_route_be_set(route)
         can_be_set = can_be_set and self.point_controller.can_route_be_set(route)
         return can_be_set
 
-    def do_two_routes_collide(self, route_1, route_2):
+    def do_two_routes_collide(self, yaramo_route_1, yaramo_route_2):
+        route_1 = self.get_route_from_yaramo_route(yaramo_route_1)
+        route_2 = self.get_route_from_yaramo_route(yaramo_route_2)
         do_collide = self.track_controller.do_two_routes_collide(route_1, route_2)
         do_collide = do_collide or self.point_controller.do_two_routes_collide(route_1, route_2)
         return do_collide
 
-    def free_route(self, route):
+    def free_route(self, yaramo_route):
+        route = self.get_route_from_yaramo_route(yaramo_route)
         self.track_controller.free_route(route)
         self.active_routes.remove(route)
+
+    def get_route_from_yaramo_route(self, yaramo_route):
+        for route in self.routes:
+            if route.yaramo_route.uuid == yaramo_route.uuid:
+                return route
+        return None
