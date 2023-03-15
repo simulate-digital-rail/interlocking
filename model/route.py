@@ -1,3 +1,6 @@
+from .overlap import Overlap
+from yaramo.model import SignalDirection
+
 
 class Route(object):
 
@@ -102,6 +105,73 @@ class Route(object):
         for track in self.tracks:
             max_speed = max(max_speed, track.yaramo_edge.maximum_speed)
         return max_speed
+
+    def get_overlaps_of_route(self, route):
+        max_speed = route.get_max_speed_of_route()
+        if max_speed <= 30:
+            missing_length_of_overlap = 0
+        elif max_speed <= 40:
+            missing_length_of_overlap = 50
+        elif max_speed <= 60:
+            missing_length_of_overlap = 100
+        else:
+            missing_length_of_overlap = 200
+
+        overlap_obj = Overlap(missing_length_of_overlap, route)
+        if missing_length_of_overlap == 0:
+            return [overlap_obj]
+
+        last_track = route.end_signal.track
+        segments_from_end_signal = last_track.get_segments_from_signal(route.end_signal)
+
+        for segment_id in segments_from_end_signal:
+            overlap_obj.add_segment(last_track, segment_id)
+            if overlap_obj.is_full():
+                return [overlap_obj]
+
+        # Current track is not enough
+        found_overlaps = self.get_overlaps_of_route_recursive(last_track, route.end_signal.yaramo_signal.direction,
+                                                              overlap_obj)
+        full_overlaps = []
+        longest_overlap = found_overlaps[0]
+        for overlap in found_overlaps:
+            if overlap.is_full():
+                full_overlaps.append(overlap)
+            if overlap.missing_length < longest_overlap.missing_length:
+                longest_overlap = overlap
+        if len(full_overlaps) > 0:
+            return full_overlaps
+        print("--- Warning: No full overlap found, take the longest one")
+        return [longest_overlap]
+
+    def get_overlaps_of_route_recursive(self, cur_track, cur_driving_direction, cur_overlap):
+        if cur_driving_direction == SignalDirection.IN:
+            next_point = cur_track.right_point
+        else:
+            next_point = cur_track.left_point
+        cur_overlap.points.append(next_point)
+        successors = next_point.get_possible_successors(cur_track)
+        results = []
+        for successor_track in successors:
+            new_overlap = cur_overlap.duplicate()
+            driving_direction = SignalDirection.IN
+            if successor_track.right_point.point_id == next_point.point_id:
+                driving_direction = SignalDirection.GEGEN
+            if driving_direction == SignalDirection.IN:
+                for segment_id in successor_track.lengths:
+                    new_overlap.add_segment(successor_track, segment_id)
+                    if new_overlap.is_full():
+                        break
+            else:
+                for segment_id in reversed(successor_track.lengths):
+                    new_overlap.add_segment(successor_track, segment_id)
+                    if new_overlap.is_full():
+                        break
+            results.append(new_overlap)
+            if not new_overlap.is_full():
+                # Track was not long enough
+                results.extend(self.get_overlaps_of_route_recursive(successor_track, driving_direction, new_overlap))
+        return results
 
     def to_string(self):
         return f"{self.start_signal.id} -> { self.end_signal.id}"

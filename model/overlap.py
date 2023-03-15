@@ -11,9 +11,9 @@ class Overlap(object):
         return self.missing_length <= 0
 
     def add_segment(self, track, segment_id):
-        if track.base_track_id not in self.segments:
-            self.segments[track.base_track_id] = []
-        self.segments[track.base_track_id].append(segment_id)
+        if track not in self.segments:
+            self.segments[track] = []
+        self.segments[track].append(segment_id)
         self.missing_length = self.missing_length - track.lengths[segment_id]
 
     def duplicate(self):
@@ -23,8 +23,8 @@ class Overlap(object):
         for point in self.points:
             new_obj.points.append(point)
 
-        for track_id in self.segments:
-            new_obj.segments[track_id] = []
-            for segment_id in self.segments[track_id]:
-                new_obj.segments[track_id].append(segment_id)
+        for track in self.segments:
+            new_obj.segments[track] = []
+            for segment_id in self.segments[track]:
+                new_obj.segments[track].append(segment_id)
         return new_obj
