@@ -14,12 +14,6 @@ class PrintLineInfrastructureProvider(InfrastructureProvider):
 
 def test_01():
 
-    def move_point_callback(point_id, orientation):
-        print(f"Move Point {point_id} {orientation}")
-
-    def set_signal_state_callback(signal, state):
-        print(f"Set Signal {signal.yaramo_signal.name} {state} {signal.yaramo_signal.direction} ")
-
     reader = PlanProReader("test/complex-example")
     topology = reader.read_topology_from_plan_pro_file()
 
