@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "interlocking_package"
+version = "0.1.1"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [
+    {include = "interlocking_package"},
+    {include = "interlocking_package.interlockingcontroller"},
+    {include = "interlocking_package.infrastructureprovider"}
+    ]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+yaramo = { git = "https://github.com/simulate-digital-rail/yaramo" }
+planpro-exporter = { git = "https://github.com/simulate-digital-rail/planpro-exporter" }
+planpro-importer = { git = "https://github.com/simulate-digital-rail/planpro-importer" }
+railway-route-generator = { git = "https://github.com/simulate-digital-rail/railway-route-generator" }
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
