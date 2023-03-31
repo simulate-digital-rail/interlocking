@@ -1,5 +1,5 @@
-from interlockingcontroller import PointController, SignalController, TrackController, TrainDetectionController
-from model import Point, Track, Signal, Route
+from .interlockingcontroller import PointController, SignalController, TrackController, TrainDetectionController
+from .model import Point, Track, Signal, Route
 
 
 class Interlocking(object):
