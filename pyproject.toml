@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "interlocking_package"
+name = "interlocking"
 version = "0.1.1"
 description = ""
 authors = ["Your Name <you@example.com>"]

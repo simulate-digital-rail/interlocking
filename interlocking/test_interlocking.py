@@ -1,7 +1,7 @@
 from planpro_importer.reader import PlanProReader
 from railwayroutegenerator.routegenerator import RouteGenerator
-from .interlocking import Interlocking
-from .infrastructureprovider import InfrastructureProvider
+from interlocking.interlockinginterface import Interlocking
+from interlocking.infrastructureprovider import InfrastructureProvider
 
 
 class PrintLineInfrastructureProvider(InfrastructureProvider):

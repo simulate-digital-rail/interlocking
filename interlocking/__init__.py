@@ -1,4 +1,4 @@
 from .interlockingcontroller import *
 from .infrastructureprovider import *
-from . import interlocking
+from . import interlockinginterface
 from . import test_interlocking
