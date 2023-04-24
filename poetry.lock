@@ -116,13 +116,13 @@ files = []
 develop = false
 
 [package.dependencies]
-yaramo = {git = "https://github.com/antonykamp/yaramo", branch = "refactor/replace-connected-nodes-with-edges"}
+yaramo = {git = "https://github.com/bp2022-ap1/yaramo", branch = "refactor/replace-connected-nodes-with-edges"}
 
 [package.source]
 type = "git"
-url = "https://github.com/antonykamp/planpro-exporter"
+url = "https://github.com/bp2022-ap1/planpro-exporter"
 reference = "refactor/replace-connected-nodes-edges"
-resolved_reference = "3c203d1222dc944782a90400915bcfb71e88dbc6"
+resolved_reference = "19968800279237e0588b8ca1b1adaf7d1449cf1f"
 
 [[package]]
 name = "planpro-importer"
@@ -137,13 +137,13 @@ develop = false
 [package.dependencies]
 lxml = "^4.9"
 six = "^1.16.0"
-yaramo = {git = "https://github.com/antonykamp/yaramo", branch = "refactor/replace-connected-nodes-with-edges"}
+yaramo = {git = "https://github.com/bp2022-ap1/yaramo", branch = "refactor/replace-connected-nodes-with-edges"}
 
 [package.source]
 type = "git"
-url = "https://github.com/antonykamp/planpro-importer"
+url = "https://github.com/bp2022-ap1/planpro-importer"
 reference = "refactor/replace-connected-nodes-edges"
-resolved_reference = "724a960057a768f3fa01b7b7c8ae1b73a6500603"
+resolved_reference = "0fcef21e9c798cceab3ed405a24c79fd8b0fda75"
 
 [[package]]
 name = "pyproj"
@@ -199,18 +199,18 @@ version = "3.0.0"
 description = ""
 category = "main"
 optional = false
-python-versions = "^3.8"
+python-versions = "^3.10"
 files = []
 develop = false
 
 [package.dependencies]
-yaramo = {git = "https://github.com/antonykamp/yaramo", branch = "refactor/replace-connected-nodes-with-edges"}
+yaramo = {git = "https://github.com/bp2022-ap1/yaramo", branch = "refactor/replace-connected-nodes-with-edges"}
 
 [package.source]
 type = "git"
-url = "https://github.com/antonykamp/railway-route-generator"
+url = "https://github.com/bp2022-ap1/railway-route-generator"
 reference = "refactor/replace-connected-nodes-edges"
-resolved_reference = "d13e82d853bff24ff7da78722ae578471f610a1c"
+resolved_reference = "0be62bf9d495b1e98530874c2d492a4bd8c5d7b2"
 
 [[package]]
 name = "six"
@@ -239,11 +239,11 @@ pyproj = "^3.4.1"
 
 [package.source]
 type = "git"
-url = "https://github.com/antonykamp/yaramo"
+url = "https://github.com/bp2022-ap1/yaramo"
 reference = "refactor/replace-connected-nodes-with-edges"
-resolved_reference = "befdf8626009ff4d7f3bfa08fe6aa6079a861fae"
+resolved_reference = "65c5a6a2e13007ea07ae0f7087840348303a1086"
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "af3f4a4b9d3258448ba0d18d03fceb63dffcd8253c97441204e31b3f2345afc5"
+content-hash = "9e4be650b9d176e332eb6a28cd87c89d2c85521af6edc43f90397136e8c5e2cb"

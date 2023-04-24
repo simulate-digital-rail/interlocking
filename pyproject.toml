@@ -11,10 +11,10 @@ python = "^3.10"
 #planpro-exporter = { git = "https://github.com/simulate-digital-rail/planpro-exporter" }
 #planpro-importer = { git = "https://github.com/simulate-digital-rail/planpro-importer" }
 #railway-route-generator = { git = "https://github.com/simulate-digital-rail/railway-route-generator" }
-yaramo = { git = "https://github.com/antonykamp/yaramo", branch="refactor/replace-connected-nodes-with-edges" }
-planpro-exporter = { git = "https://github.com/antonykamp/planpro-exporter", branch = "refactor/replace-connected-nodes-edges" }
-planpro-importer = { git = "https://github.com/antonykamp/planpro-importer", branch = "refactor/replace-connected-nodes-edges" }
-railway-route-generator = { git = "https://github.com/antonykamp/railway-route-generator", branch = "refactor/replace-connected-nodes-edges" }
+yaramo = { git = "https://github.com/bp2022-ap1/yaramo", branch="refactor/replace-connected-nodes-with-edges" }
+planpro-exporter = { git = "https://github.com/bp2022-ap1/planpro-exporter", branch = "refactor/replace-connected-nodes-edges" }
+planpro-importer = { git = "https://github.com/bp2022-ap1/planpro-importer", branch = "refactor/replace-connected-nodes-edges" }
+railway-route-generator = { git = "https://github.com/bp2022-ap1/railway-route-generator", branch = "refactor/replace-connected-nodes-edges" }
 
 
 [build-system]
