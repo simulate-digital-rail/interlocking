@@ -1,8 +1,11 @@
 class TrainDetectionController(object):
 
-    def __init__(self, track_controller):
+    def __init__(self, track_controller, infrastructure_providers):
         self.track_controller = track_controller
         self.state = dict()
+        for infrastructure_provider in infrastructure_providers:
+            infrastructure_provider._set_tds_count_in_callback(self.count_in)
+            infrastructure_provider._set_tds_count_out_callback(self.count_out)
 
     def count_in(self, track_segment_id):
         if track_segment_id not in self.state:

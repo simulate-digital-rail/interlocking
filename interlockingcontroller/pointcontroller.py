@@ -1,20 +1,18 @@
 class PointController(object):
 
-    def __init__(self,move_point_callback):
+    def __init__(self, infrastructure_providers):
         self.points = None
-        self.move_point_callback = move_point_callback
+        self.infrastructure_providers = infrastructure_providers
 
     def reset(self):
         for point_id in self.points:
             self.points[point_id].orientation = "undefined"
-            self.points[point_id].state = "free"
+            self.set_point_free(self.points[point_id])
 
     def set_route(self, route):
-        for point_information in self.get_points_of_route(route):
-            point = point_information[0]
-            first_track = point_information[1]
-            second_track = point_information[2]
-            orientation = point.get_necessary_orientation(first_track, second_track)
+        for point_orientations in route.get_necessary_point_orientations():
+            point = point_orientations[0]
+            orientation = point_orientations[1]
             if orientation == "left" or orientation == "right":
                 self.turn_point(point, orientation)
                 self.set_point_reserved(point)
@@ -22,27 +20,15 @@ class PointController(object):
                 raise ValueError("Turn should happen but is not possible")
 
     def can_route_be_set(self, route):
-        for point_information in self.get_points_of_route(route):
-            point = point_information[0]
+        for point in route.get_points_of_route():
             if point.state != "free":
                 return False
         return True
 
     def do_two_routes_collide(self, route_1, route_2):
-        points_of_route_1 = {point_information[0] for point_information in self.get_points_of_route(route_1)}
-        points_of_route_2 = {point_information[0] for point_information in self.get_points_of_route(route_2)}
+        points_of_route_1 = route_1.get_points_of_route()
+        points_of_route_2 = route_2.get_points_of_route()
         return len(points_of_route_1.intersection(points_of_route_2)) > 0
-
-    def get_points_of_route(self, route):
-        result = []
-        for i in range(0, len(route.tracks_to_visit) - 1):
-            first_track = route.tracks_to_visit[i]
-            second_track = route.tracks_to_visit[i + 1]
-            for point_id in self.points:
-                point = self.points[point_id]
-                if point.does_point_connect_tracks(first_track, second_track):
-                    result.append((point, first_track, second_track))
-        return result
 
     def turn_point(self, point, orientation):
         if point.orientation == orientation:
@@ -50,7 +36,8 @@ class PointController(object):
             return
         print(f"--- Move point {point.point_id} to {orientation}")
         point.orientation = orientation
-        self.move_point_callback(point.point_id,orientation)
+        for infrastructure_provider in self.infrastructure_providers:
+            infrastructure_provider.set_signal_state(point.yaramo_node, orientation)
 
     def set_point_reserved(self, point):
         print(f"--- Set point {point.point_id} to reserved")
