@@ -2,14 +2,14 @@
 
 [[package]]
 name = "certifi"
-version = "2022.12.7"
+version = "2023.5.7"
 description = "Python package for providing Mozilla's CA Bundle."
 category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "certifi-2022.12.7-py3-none-any.whl", hash = "sha256:4ad3232f5e926d6718ec31cfc1fcadfde020920e278684144551c91769c7bc18"},
-    {file = "certifi-2022.12.7.tar.gz", hash = "sha256:35824b4c3a97115964b408844d64aa14db1cc518f6562e8d7261699d1350a9e3"},
+    {file = "certifi-2023.5.7-py3-none-any.whl", hash = "sha256:c6c2e98f5c7869efca1f8916fed228dd91539f9f1b444c314c06eef02980c716"},
+    {file = "certifi-2023.5.7.tar.gz", hash = "sha256:0f0d56dc5a6ad56fd4ba36484d6cc34451e1c6548c61daad8c320169f91eddc7"},
 ]
 
 [[package]]
@@ -106,25 +106,6 @@ htmlsoup = ["BeautifulSoup4"]
 source = ["Cython (>=0.29.7)"]
 
 [[package]]
-name = "planpro-exporter"
-version = "0.9"
-description = ""
-category = "main"
-optional = false
-python-versions = "^3.10"
-files = []
-develop = false
-
-[package.dependencies]
-yaramo = {git = "https://github.com/bp2022-ap1/yaramo", branch = "refactor/replace-connected-nodes-with-edges"}
-
-[package.source]
-type = "git"
-url = "https://github.com/bp2022-ap1/planpro-exporter"
-reference = "refactor/replace-connected-nodes-edges"
-resolved_reference = "19968800279237e0588b8ca1b1adaf7d1449cf1f"
-
-[[package]]
 name = "planpro-importer"
 version = "1.9.0"
 description = ""
@@ -210,7 +191,7 @@ yaramo = {git = "https://github.com/bp2022-ap1/yaramo", branch = "refactor/repla
 type = "git"
 url = "https://github.com/bp2022-ap1/railway-route-generator"
 reference = "refactor/replace-connected-nodes-edges"
-resolved_reference = "0be62bf9d495b1e98530874c2d492a4bd8c5d7b2"
+resolved_reference = "ee4694d03713033efd29090f23b8b8ee4fd0af91"
 
 [[package]]
 name = "six"
@@ -241,9 +222,9 @@ pyproj = "^3.4.1"
 type = "git"
 url = "https://github.com/bp2022-ap1/yaramo"
 reference = "refactor/replace-connected-nodes-with-edges"
-resolved_reference = "65c5a6a2e13007ea07ae0f7087840348303a1086"
+resolved_reference = "644da36c9cc976a124dbd5617b007bb86d14ed48"
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "9e4be650b9d176e332eb6a28cd87c89d2c85521af6edc43f90397136e8c5e2cb"
+content-hash = "59c4e8d479c2b3695625fd7e90cf5b0cecdba14b2eaaa971e2252f2ad24c719b"
