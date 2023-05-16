@@ -24,6 +24,9 @@ class SignalController(object):
         for infrastructure_provider in self.infrastructure_providers:
             infrastructure_provider.set_signal_state(signal.yaramo_signal, "go")
 
+    def reset_route(self, route):
+        self.set_signal_halt(route.start_signal)
+
     def print_state(self):
         print("State of Signals:")
         for signal_uuid in self.signals:

@@ -118,6 +118,14 @@ class Interlocking(object):
         self.track_controller.free_route(route)
         self.active_routes.remove(route)
 
+    def reset_route(self, yaramo_route):
+        route = self.get_route_from_yaramo_route(yaramo_route)
+        self.point_controller.reset_route(route)
+        self.track_controller.reset_route(route)
+        self.train_detection_controller.reset_track_segments_of_route(route)
+        self.signal_controller.reset_route(route)
+        self.active_routes.remove(route)
+
     def get_route_from_yaramo_route(self, yaramo_route):
         for route in self.routes:
             if route.yaramo_route.uuid == yaramo_route.uuid:
