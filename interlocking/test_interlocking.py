@@ -1,7 +1,7 @@
 from planpro_importer.reader import PlanProReader
 from railwayroutegenerator.routegenerator import RouteGenerator
-from interlocking import Interlocking
-from infrastructureprovider import InfrastructureProvider
+from interlocking.interlockinginterface import Interlocking
+from interlocking.infrastructureprovider import InfrastructureProvider
 
 
 class PrintLineInfrastructureProvider(InfrastructureProvider):
@@ -14,7 +14,8 @@ class PrintLineInfrastructureProvider(InfrastructureProvider):
 
 def test_01():
 
-    reader = PlanProReader("test/complex-example")
+    path = __file__.split("test_interlocking.py")[0]
+    reader = PlanProReader(path + "/test/complex-example")
     topology = reader.read_topology_from_plan_pro_file()
 
     # TODO: At the moment, the railway route generator can not calculate max speeds since the edges have no max speeds
