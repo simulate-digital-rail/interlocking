@@ -37,7 +37,7 @@ class PointController(object):
         print(f"--- Move point {point.point_id} to {orientation}")
         point.orientation = orientation
         for infrastructure_provider in self.infrastructure_providers:
-            infrastructure_provider.set_signal_state(point.yaramo_node, orientation)
+            infrastructure_provider.turn_point(point.yaramo_node, orientation)
 
     def set_point_reserved(self, point):
         print(f"--- Set point {point.point_id} to reserved")
