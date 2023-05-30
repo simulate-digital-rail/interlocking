@@ -25,9 +25,9 @@ def test_01():
     for edge_uuid in topology.edges:
         edge = topology.edges[edge_uuid]
         if edge_uuid in outer_station_edges:
-            edge.maximum_speed = 30
+            edge.maximum_speed = 60
         else:
-            edge.maximum_speed = 30
+            edge.maximum_speed = 40
 
     generator = RouteGenerator(topology)
     generator.generate_routes()
