@@ -42,6 +42,7 @@ def test_01():
         for _route_uuid in topology.routes:
             _route = topology.routes[_route_uuid]
             if _route.start_signal.name == _start_signal_name and _route.end_signal.name == _end_signal_name:
+                print(f"### Set Route {_start_signal_name} -> {_end_signal_name}")
                 _could_be_set = interlocking.set_route(_route)
                 assert (_could_be_set == _should_be_able_to_set)
                 interlocking.print_state()
@@ -50,7 +51,16 @@ def test_01():
         for _route_uuid in topology.routes:
             _route = topology.routes[_route_uuid]
             if _route.start_signal.name == _start_signal_name and _route.end_signal.name == _end_signal_name:
+                print(f"### Free Route {_start_signal_name} -> {_end_signal_name}")
                 interlocking.free_route(_route)
+                interlocking.print_state()
+
+    def reset_route(_start_signal_name, _end_signal_name):
+        for _route_uuid in topology.routes:
+            _route = topology.routes[_route_uuid]
+            if _route.start_signal.name == _start_signal_name and _route.end_signal.name == _end_signal_name:
+                print(f"### Reset Route {_start_signal_name} -> {_end_signal_name}")
+                interlocking.reset_route(_route)
                 interlocking.print_state()
 
     set_route("60BS1", "60BS2", True)
@@ -72,6 +82,9 @@ def test_01():
 
     set_route("60ES2", "60AS4", True)
     set_route("60ES2", "60AS3", False)
+
+    reset_route("60ES2", "60AS4")
+    set_route("60ES2", "60AS4", True)
 
     interlocking.reset()
 

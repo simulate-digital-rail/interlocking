@@ -53,6 +53,16 @@ class TrackController(object):
     def free_route(self, route):
         self.overlap_controller.free_overlap_of_route(route)
 
+    def reset_route(self, route):
+        segments = route.get_segments_of_route()
+        for track_base_id in segments:
+            track = self.tracks[track_base_id]
+            for segment_id in segments[track_base_id]:
+                print(f"--- Set track {segment_id} free")
+                track.state[segment_id] = "free"
+
+        self.overlap_controller.free_overlap_of_route(route)
+
     def reserve_route(self, route):
         segments = route.get_segments_of_route()
         for track_base_id in segments:
