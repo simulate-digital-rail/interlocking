@@ -1,3 +1,6 @@
+import asyncio
+
+
 class OverlapController(object):
 
     def __init__(self, interlocking, track_controller, point_controller):
@@ -5,13 +8,14 @@ class OverlapController(object):
         self.track_controller = track_controller
         self.point_controller = point_controller
 
-    def reserve_overlap_of_route(self, route):
+    async def reserve_overlap_of_route(self, route):
         overlap = self.get_first_reservable_overlap(route)
         if overlap is None:
             raise ValueError("No reservable overlap found")
         self.reserve_segments_of_overlap(overlap)
-        self.reserve_points_of_overlap(overlap)
+        success = await self.reserve_points_of_overlap(overlap)
         route.overlap = overlap
+        return success
 
     def get_first_reservable_overlap(self, route):
         all_overlaps = route.get_overlaps_of_route()
@@ -39,22 +43,25 @@ class OverlapController(object):
                 print(f"--- Set track {segment_id} reserved (overlap)")
                 track.state[segment_id] = "reserved-overlap"
 
-    def reserve_points_of_overlap(self, overlap):
-        for point in overlap.points:
-            print(f"--- Set point {point.point_id} to reserved (overlap)")
-            point.state = "reserved-overlap"
+    async def reserve_points_of_overlap(self, overlap):
+        tasks = []
+        async with asyncio.TaskGroup() as tg:
+            for point in overlap.points:
+                print(f"--- Set point {point.point_id} to reserved (overlap)")
+                point.state = "reserved-overlap"
 
-            # Get necessary orientation
-            points_tracks = [point.head, point.left, point.right]
-            found_tracks = []
-            for track in points_tracks:
-                if track in overlap.segments:
-                    found_tracks.append(track)
+                # Get necessary orientation
+                points_tracks = [point.head, point.left, point.right]
+                found_tracks = []
+                for track in points_tracks:
+                    if track in overlap.segments:
+                        found_tracks.append(track)
 
-            if len(found_tracks) != 2:
-                raise ValueError("Overlap contains points without 2 of their tracks")
-            necessery_orientation = point.get_necessary_orientation(found_tracks[0], found_tracks[1])
-            self.point_controller.turn_point(point, necessery_orientation)
+                if len(found_tracks) != 2:
+                    raise ValueError("Overlap contains points without 2 of their tracks")
+                necessery_orientation = point.get_necessary_orientation(found_tracks[0], found_tracks[1])
+                tasks.append(tg.create_task(self.point_controller.turn_point(point, necessery_orientation)))
+        return all(list(map(lambda task: task.result(), tasks)))
 
     def free_overlap_of_route(self, route):
         overlap = route.overlap

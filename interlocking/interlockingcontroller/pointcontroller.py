@@ -1,3 +1,6 @@
+import asyncio
+
+
 class PointController(object):
 
     def __init__(self, infrastructure_providers):
@@ -9,15 +12,19 @@ class PointController(object):
             self.points[point_id].orientation = "undefined"
             self.set_point_free(self.points[point_id])
 
-    def set_route(self, route):
-        for point_orientations in route.get_necessary_point_orientations():
-            point = point_orientations[0]
-            orientation = point_orientations[1]
-            if orientation == "left" or orientation == "right":
-                self.turn_point(point, orientation)
-                self.set_point_reserved(point)
-            else:
-                raise ValueError("Turn should happen but is not possible")
+    async def set_route(self, route):
+        tasks = []
+        async with asyncio.TaskGroup() as tg:
+            for point_orientations in route.get_necessary_point_orientations():
+                point = point_orientations[0]
+                orientation = point_orientations[1]
+                if orientation == "left" or orientation == "right":
+                    self.set_point_reserved(point)
+                    tasks.append(tg.create_task(self.turn_point(point, orientation)))
+                else:
+                    raise ValueError("Turn should happen but is not possible")
+
+        return all(list(map(lambda task: task.result(), tasks)))
 
     def can_route_be_set(self, route):
         for point in route.get_points_of_route():
@@ -30,14 +37,21 @@ class PointController(object):
         points_of_route_2 = route_2.get_points_of_route()
         return len(points_of_route_1.intersection(points_of_route_2)) > 0
 
-    def turn_point(self, point, orientation):
+    async def turn_point(self, point, orientation):
         if point.orientation == orientation:
             # Everything is fine
-            return
+            return True
         print(f"--- Move point {point.point_id} to {orientation}")
-        point.orientation = orientation
-        for infrastructure_provider in self.infrastructure_providers:
-            infrastructure_provider.turn_point(point.yaramo_node, orientation)
+        tasks = []
+        async with asyncio.TaskGroup() as tg:
+            for infrastructure_provider in self.infrastructure_providers:
+                tasks.append(tg.create_task(infrastructure_provider.turn_point(point.yaramo_node, orientation)))
+        if all(list(map(lambda task: task.result(), tasks))):
+            point.orientation = orientation
+            return True
+        else:
+            # TODO: Incident
+            return False
 
     def set_point_reserved(self, point):
         print(f"--- Set point {point.point_id} to reserved")

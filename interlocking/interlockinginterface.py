@@ -1,5 +1,6 @@
 from interlocking.interlockingcontroller import PointController, SignalController, TrackController, TrainDetectionController
 from interlocking.model import Point, Track, Signal, Route
+import asyncio
 
 
 class Interlocking(object):
@@ -90,15 +91,20 @@ class Interlocking(object):
             print(active_route.to_string())
         print("##############")
 
-    def set_route(self, yaramo_route):
+    async def set_route(self, yaramo_route):
         if not self.can_route_be_set(yaramo_route):
             return False
         route = self.get_route_from_yaramo_route(yaramo_route)
         self.active_routes.append(route)
-        self.point_controller.set_route(route)
-        self.track_controller.set_route(route)
-        self.signal_controller.set_route(route)
-        return True
+
+        async with asyncio.TaskGroup() as tg:
+            point_task = tg.create_task(self.point_controller.set_route(route))
+            track_task = tg.create_task(self.track_controller.set_route(route))
+
+        # Only set the signal to go if the points and tracks are processed
+        if point_task.result() and track_task.result():
+            return await self.signal_controller.set_route(route)
+        return False
 
     def can_route_be_set(self, yaramo_route):
         route = self.get_route_from_yaramo_route(yaramo_route)

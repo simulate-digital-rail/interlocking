@@ -16,8 +16,8 @@ class TrackController(object):
             for segment_id in track.state:
                 track.state[segment_id] = "free"
 
-    def set_route(self, route):
-        self.reserve_route(route)
+    async def set_route(self, route):
+        return await self.reserve_route(route)
 
     def can_route_be_set(self, route):
         segments = route.get_segments_of_route()
@@ -53,30 +53,34 @@ class TrackController(object):
     def free_route(self, route):
         self.overlap_controller.free_overlap_of_route(route)
 
-    def reserve_route(self, route):
+    async def reserve_route(self, route):
         segments = route.get_segments_of_route()
         for track_base_id in segments:
             track = self.tracks[track_base_id]
             for segment_id in segments[track_base_id]:
                 print(f"--- Set track {segment_id} reserved")
                 track.state[segment_id] = "reserved"
-        self.overlap_controller.reserve_overlap_of_route(route)
+        return await self.overlap_controller.reserve_overlap_of_route(route)
 
-    def occupy_segment_of_track(self, track, segment_id):
+    async def occupy_segment_of_track(self, track, segment_id):
         if track.state[segment_id] != "occupied":
             print(f"--- Set track {segment_id} occupied")
             track.state[segment_id] = "occupied"
 
             # Set signal to halt
+            success_first_signal = True
+            success_second_signal = True
             pos_of_segment = track.get_position_of_segment(segment_id)
             if pos_of_segment > 0:
                 previous_signal = track.signals[pos_of_segment - 1]
                 if previous_signal.yaramo_signal.direction == SignalDirection.IN:
-                    self.signal_controller.set_signal_halt(previous_signal)
+                    success_first_signal = await self.signal_controller.set_signal_halt(previous_signal)
             if pos_of_segment < len(track.signals):
                 next_signal = track.signals[pos_of_segment]
                 if next_signal.yaramo_signal.direction == SignalDirection.GEGEN:
-                    self.signal_controller.set_signal_halt(next_signal)
+                    success_second_signal = await self.signal_controller.set_signal_halt(next_signal)
+            return success_first_signal and success_second_signal
+        return True
 
     def free_segment_of_track(self, track, segment_id):
         if track.state[segment_id] != "free":

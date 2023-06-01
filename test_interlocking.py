@@ -2,14 +2,37 @@ from planpro_importer.reader import PlanProReader
 from railwayroutegenerator.routegenerator import RouteGenerator
 from interlocking.interlockinginterface import Interlocking
 from interlocking.infrastructureprovider import InfrastructureProvider
+import time
+import random
+import asyncio
 
 
 class PrintLineInfrastructureProvider(InfrastructureProvider):
-    def turn_point(self, yaramo_point, target_orientation):
-        print(f"Turn Point {yaramo_point.uuid[-5:]} to {target_orientation}")
+    async def turn_point(self, yaramo_point, target_orientation):
+        # Time to turn point according to
+        # https://de.wikipedia.org/wiki/Weiche_(Bahn)#Umlaufzeiten
+        wait = random.randint(5, 7)
+        point_id = yaramo_point.uuid[-5:]
+        print(f"{time.strftime('%X')} Turn point {point_id} to {target_orientation} (wait {wait})")
+        await asyncio.sleep(wait)
+        if random.randint(0, 3) > 0 or True:
+            print(f"{time.strftime('%X')} Completed turning point {point_id} to {target_orientation}")
+            return True
+        #print(f"{time.strftime('%X')} Failed turning point {point_id} to {target_orientation}")
+        #return False
 
-    def set_signal_state(self, yaramo_signal, target_state):
-        print(f"Set Signal {yaramo_signal.name} to {target_state}")
+    async def set_signal_state(self, yaramo_signal, target_state):
+        # Time to set signal regarding to
+        # https://www.graefelfing.de/fileadmin/user_upload/Ortsplanung_Mobilitaet/Verkehrsplanung/Verkehrsuntersuchungen/Bahnuebergang_Brunhamstrasse/Gutachten-Schliesszeiten-Bericht.pdf
+        wait = random.randint(2, 4)
+        signal_id = yaramo_signal.uuid[-5:]
+        print(f"{time.strftime('%X')} Set signal {signal_id} to {target_state} (wait {wait})")
+        await asyncio.sleep(wait)
+        if random.randint(0, 3) > 0 or True:
+            print(f"{time.strftime('%X')} Completed setting signal {signal_id} to {target_state}")
+            return True
+        #print(f"{time.strftime('%X')} Failed setting signal {signal_id} to {target_state}")
+        #return False
 
 
 def test_01():
@@ -42,7 +65,7 @@ def test_01():
         for _route_uuid in topology.routes:
             _route = topology.routes[_route_uuid]
             if _route.start_signal.name == _start_signal_name and _route.end_signal.name == _end_signal_name:
-                _could_be_set = interlocking.set_route(_route)
+                _could_be_set = asyncio.run(interlocking.set_route(_route))
                 assert (_could_be_set == _should_be_able_to_set)
                 interlocking.print_state()
 
@@ -54,7 +77,6 @@ def test_01():
                 interlocking.print_state()
 
     set_route("60BS1", "60BS2", True)
-
     # "Drive" some train
     print("Driving!")
     tds = interlocking.train_detection_controller
@@ -69,6 +91,7 @@ def test_01():
     infrastructure_provider.tds_count_out("b8e69-0")
     interlocking.print_state()
     free_route("60BS1", "60BS2")
+    return
 
     set_route("60ES2", "60AS4", True)
     set_route("60ES2", "60AS3", False)
