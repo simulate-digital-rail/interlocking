@@ -22,6 +22,10 @@ class TrainDetectionController(object):
             self.track_controller.free_segment_of_track(self.get_track_of_segment_id(track_segment_id),
                                                         track_segment_id)
 
+    def reset_track_segments_of_route(self, route):
+        for track_segment_id in route.get_segments_of_route():
+            self.state[track_segment_id] = 0
+
     def get_track_of_segment_id(self, track_segment_id):
         for track_key in self.track_controller.tracks:
             track = self.track_controller.tracks[track_key]

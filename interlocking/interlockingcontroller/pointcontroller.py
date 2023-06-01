@@ -61,6 +61,10 @@ class PointController(object):
         print(f"--- Set point {point.point_id} to free")
         point.state = "free"
 
+    def reset_route(self, route):
+        for point in route.get_points_of_route():
+            self.set_point_free(point)
+
     def print_state(self):
         print("State of Points:")
         for point_id in self.points:

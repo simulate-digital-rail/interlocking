@@ -37,6 +37,9 @@ class SignalController(object):
             # TODO: Incident
             return False
 
+    def reset_route(self, route):
+        self.set_signal_halt(route.start_signal)
+
     def print_state(self):
         print("State of Signals:")
         for signal_uuid in self.signals:
