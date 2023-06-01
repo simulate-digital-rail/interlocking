@@ -6,7 +6,7 @@ authors = ["OSMHPI <arne.boockmeyer@hpi.de>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 yaramo = { git = "https://github.com/simulate-digital-rail/yaramo" }
 planpro-importer = { git = "https://github.com/simulate-digital-rail/planpro-importer" }
 railway-route-generator = { git = "https://github.com/simulate-digital-rail/railway-route-generator" }
