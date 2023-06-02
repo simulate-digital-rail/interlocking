@@ -2,6 +2,7 @@ from planpro_importer.reader import PlanProReader
 from railwayroutegenerator.routegenerator import RouteGenerator
 from interlocking.interlockinginterface import Interlocking
 from interlocking.infrastructureprovider import InfrastructureProvider
+from interlocking.model.helper import Settings
 import time
 import random
 import asyncio
@@ -15,7 +16,7 @@ class PrintLineInfrastructureProvider(InfrastructureProvider):
         point_id = yaramo_point.uuid[-5:]
         print(f"{time.strftime('%X')} Turn point {point_id} to {target_orientation} (wait {wait})")
         await asyncio.sleep(wait)
-        if random.randint(0, 3) > 0:
+        if random.randint(0, 3) > 0 or True:
             print(f"{time.strftime('%X')} Completed turning point {point_id} to {target_orientation}")
             return True
         print(f"{time.strftime('%X')} Failed turning point {point_id} to {target_orientation}")
@@ -57,7 +58,7 @@ def test_01():
 
     infrastructure_provider = PrintLineInfrastructureProvider()
 
-    interlocking = Interlocking(infrastructure_provider)
+    interlocking = Interlocking(infrastructure_provider, Settings(max_number_of_points_at_same_time=3))
     interlocking.prepare(topology)
     interlocking.print_state()
 

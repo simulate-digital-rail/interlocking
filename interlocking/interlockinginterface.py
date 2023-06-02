@@ -1,18 +1,19 @@
 from interlocking.interlockingcontroller import PointController, SignalController, TrackController, TrainDetectionController
 from interlocking.model import Point, Track, Signal, Route
-from interlocking.model.helper import SetRouteResult
+from interlocking.model.helper import SetRouteResult, Settings
 import asyncio
 import time
 
 
 class Interlocking(object):
 
-    def __init__(self, infrastructure_providers):
+    def __init__(self, infrastructure_providers, settings=Settings()):
         if not isinstance(infrastructure_providers, list):
             infrastructure_providers = [infrastructure_providers]
         self.infrastructure_providers = infrastructure_providers
+        self.settings = settings
 
-        self.point_controller = PointController(self.infrastructure_providers)
+        self.point_controller = PointController(self.infrastructure_providers, self.settings)
         self.signal_controller = SignalController(self.infrastructure_providers)
         self.track_controller = TrackController(self, self.point_controller, self.signal_controller)
         self.train_detection_controller = TrainDetectionController(self.track_controller, self.infrastructure_providers)

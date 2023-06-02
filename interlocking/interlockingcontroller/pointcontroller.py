@@ -3,9 +3,10 @@ import asyncio
 
 class PointController(object):
 
-    def __init__(self, infrastructure_providers):
+    def __init__(self, infrastructure_providers, settings):
         self.points = None
         self.infrastructure_providers = infrastructure_providers
+        self.settings = settings
 
     def reset(self):
         for point_id in self.points:
@@ -14,15 +15,17 @@ class PointController(object):
 
     async def set_route(self, route):
         tasks = []
-        async with asyncio.TaskGroup() as tg:
-            for point_orientations in route.get_necessary_point_orientations():
-                point = point_orientations[0]
-                orientation = point_orientations[1]
-                if orientation == "left" or orientation == "right":
-                    self.set_point_reserved(point)
-                    tasks.append(tg.create_task(self.turn_point(point, orientation)))
-                else:
-                    raise ValueError("Turn should happen but is not possible")
+        point_orientations = route.get_necessary_point_orientations()
+        for i in range(0, len(point_orientations), self.settings.max_number_of_points_at_same_time):
+            async with asyncio.TaskGroup() as tg:
+                for point_orientation in point_orientations[i:i+self.settings.max_number_of_points_at_same_time]:
+                    point = point_orientation[0]
+                    orientation = point_orientation[1]
+                    if orientation == "left" or orientation == "right":
+                        self.set_point_reserved(point)
+                        tasks.append(tg.create_task(self.turn_point(point, orientation)))
+                    else:
+                        raise ValueError("Turn should happen but is not possible")
 
         return all(list(map(lambda task: task.result(), tasks)))
 
