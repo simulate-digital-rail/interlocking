@@ -6,6 +6,7 @@ from interlocking.model.helper import Settings
 import time
 import random
 import asyncio
+import logging
 
 
 class PrintLineInfrastructureProvider(InfrastructureProvider):
@@ -14,12 +15,12 @@ class PrintLineInfrastructureProvider(InfrastructureProvider):
         # https://de.wikipedia.org/wiki/Weiche_(Bahn)#Umlaufzeiten
         wait = random.randint(5, 7)
         point_id = yaramo_point.uuid[-5:]
-        print(f"{time.strftime('%X')} Turn point {point_id} to {target_orientation} (wait {wait})")
+        logging.info(f"{time.strftime('%X')} Turn point {point_id} to {target_orientation} (wait {wait})")
         await asyncio.sleep(wait)
         if random.randint(0, 3) > 0 or True:
-            print(f"{time.strftime('%X')} Completed turning point {point_id} to {target_orientation}")
+            logging.info(f"{time.strftime('%X')} Completed turning point {point_id} to {target_orientation}")
             return True
-        print(f"{time.strftime('%X')} Failed turning point {point_id} to {target_orientation}")
+        logging.warning(f"{time.strftime('%X')} Failed turning point {point_id} to {target_orientation}")
         return False
 
     async def set_signal_state(self, yaramo_signal, target_state):
@@ -27,12 +28,12 @@ class PrintLineInfrastructureProvider(InfrastructureProvider):
         # https://www.graefelfing.de/fileadmin/user_upload/Ortsplanung_Mobilitaet/Verkehrsplanung/Verkehrsuntersuchungen/Bahnuebergang_Brunhamstrasse/Gutachten-Schliesszeiten-Bericht.pdf
         wait = random.randint(2, 4)
         signal_id = yaramo_signal.uuid[-5:]
-        print(f"{time.strftime('%X')} Set signal {signal_id} to {target_state} (wait {wait})")
+        logging.info(f"{time.strftime('%X')} Set signal {signal_id} to {target_state} (wait {wait})")
         await asyncio.sleep(wait)
         if random.randint(0, 3) > 0:
-            print(f"{time.strftime('%X')} Completed setting signal {signal_id} to {target_state}")
+            logging.info(f"{time.strftime('%X')} Completed setting signal {signal_id} to {target_state}")
             return True
-        print(f"{time.strftime('%X')} Failed setting signal {signal_id} to {target_state}")
+        logging.warning(f"{time.strftime('%X')} Failed setting signal {signal_id} to {target_state}")
         return False
 
 
@@ -66,7 +67,7 @@ def test_01():
         for _route_uuid in topology.routes:
             _route = topology.routes[_route_uuid]
             if _route.start_signal.name == _start_signal_name and _route.end_signal.name == _end_signal_name:
-                print(f"### Set Route {_start_signal_name} -> {_end_signal_name}")
+                logging.debug(f"### Set Route {_start_signal_name} -> {_end_signal_name}")
                 _set_route_result = asyncio.run(interlocking.set_route(_route))
                 #assert (_set_route_result.success == _should_be_able_to_set)
                 interlocking.print_state()
@@ -76,7 +77,7 @@ def test_01():
         for _route_uuid in topology.routes:
             _route = topology.routes[_route_uuid]
             if _route.start_signal.name == _start_signal_name and _route.end_signal.name == _end_signal_name:
-                print(f"### Free Route {_start_signal_name} -> {_end_signal_name}")
+                logging.debug(f"### Free Route {_start_signal_name} -> {_end_signal_name}")
                 interlocking.free_route(_route)
                 interlocking.print_state()
 
@@ -84,15 +85,15 @@ def test_01():
         for _route_uuid in topology.routes:
             _route = topology.routes[_route_uuid]
             if _route.start_signal.name == _start_signal_name and _route.end_signal.name == _end_signal_name:
-                print(f"### Reset Route {_start_signal_name} -> {_end_signal_name}")
+                logging.debug(f"### Reset Route {_start_signal_name} -> {_end_signal_name}")
                 interlocking.reset_route(_route)
                 interlocking.print_state()
 
     set_route_result = set_route("60BS1", "60BS2", True)
-    print(f"Set route success: {set_route_result.success}, Route Formation Time: {set_route_result.route_formation_time}")
+    logging.info(f"Set route success: {set_route_result.success}, Route Formation Time: {set_route_result.route_formation_time}")
     # "Drive" some train
     if set_route_result.success:
-        print("Driving!")
+        logging.info("Driving!")
         tds = interlocking.train_detection_controller
         infrastructure_provider.tds_count_in("de139-1")
         infrastructure_provider.tds_count_in("de139-2")
@@ -122,10 +123,11 @@ def test_01():
                 route_1 = topology.routes[route_uuid_1]
                 route_2 = topology.routes[route_uuid_2]
                 do_collide = interlocking.do_two_routes_collide(route_1, route_2)
-                print(f"{route_1.start_signal.name} -> {route_1.end_signal.name} and {route_2.start_signal.name} -> {route_2.end_signal.name}: collide? {do_collide}")
+                logging.debug(f"{route_1.start_signal.name} -> {route_1.end_signal.name} and {route_2.start_signal.name} -> {route_2.end_signal.name}: collide? {do_collide}")
 
             
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     test_01()
 
 

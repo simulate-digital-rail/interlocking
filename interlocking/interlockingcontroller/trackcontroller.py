@@ -1,5 +1,7 @@
 from .overlapcontroller import OverlapController
 from yaramo.model import SignalDirection
+import logging
+
 
 class TrackController(object):
 
@@ -58,7 +60,7 @@ class TrackController(object):
         for track_base_id in segments:
             track = self.tracks[track_base_id]
             for segment_id in segments[track_base_id]:
-                print(f"--- Set track {segment_id} free")
+                logging.info(f"--- Set track {segment_id} free")
                 track.state[segment_id] = "free"
 
         self.overlap_controller.free_overlap_of_route(route)
@@ -69,13 +71,13 @@ class TrackController(object):
         for track_base_id in segments:
             track = self.tracks[track_base_id]
             for segment_id in segments[track_base_id]:
-                print(f"--- Set track {segment_id} reserved")
+                logging.info(f"--- Set track {segment_id} reserved")
                 track.state[segment_id] = "reserved"
         return await self.overlap_controller.reserve_overlap_of_route(route)
 
     async def occupy_segment_of_track(self, track, segment_id):
         if track.state[segment_id] != "occupied":
-            print(f"--- Set track {segment_id} occupied")
+            logging.info(f"--- Set track {segment_id} occupied")
             track.state[segment_id] = "occupied"
 
             # Set signal to halt
@@ -95,7 +97,7 @@ class TrackController(object):
 
     def free_segment_of_track(self, track, segment_id):
         if track.state[segment_id] != "free":
-            print(f"--- Set track {segment_id} free")
+            logging.info(f"--- Set track {segment_id} free")
             track.state[segment_id] = "free"
 
             # Free point
@@ -117,8 +119,8 @@ class TrackController(object):
                     self.point_controller.set_point_free(track.right_point)
 
     def print_state(self):
-        print("State of Tracks:")
+        logging.debug("State of Tracks:")
         for base_track_id in self.tracks:
             track = self.tracks[base_track_id]
             for segment in track.state:
-                print(f"{segment}: {track.state[segment]}")
+                logging.debug(f"{segment}: {track.state[segment]}")

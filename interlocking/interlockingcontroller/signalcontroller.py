@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 
 class SignalController(object):
@@ -25,7 +26,7 @@ class SignalController(object):
         if signal.state == state:
             # Everything is fine
             return True
-        print(f"--- Set signal {signal.yaramo_signal.name} to {state}")
+        logging.info(f"--- Set signal {signal.yaramo_signal.name} to {state}")
         tasks = []
         async with asyncio.TaskGroup() as tg:
             for infrastructure_provider in self.infrastructure_providers:
@@ -41,7 +42,7 @@ class SignalController(object):
         await self.set_signal_halt(route.start_signal)
 
     def print_state(self):
-        print("State of Signals:")
+        logging.debug("State of Signals:")
         for signal_uuid in self.signals:
             signal = self.signals[signal_uuid]
-            print(f"{signal.yaramo_signal.name}: {signal.state}")
+            logging.debug(f"{signal.yaramo_signal.name}: {signal.state}")

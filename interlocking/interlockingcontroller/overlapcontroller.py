@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 
 class OverlapController(object):
@@ -40,14 +41,14 @@ class OverlapController(object):
     def reserve_segments_of_overlap(self, overlap):
         for track in overlap.segments:
             for segment_id in overlap.segments[track]:
-                print(f"--- Set track {segment_id} reserved (overlap)")
+                logging.info(f"--- Set track {segment_id} reserved (overlap)")
                 track.state[segment_id] = "reserved-overlap"
 
     async def reserve_points_of_overlap(self, overlap):
         tasks = []
         async with asyncio.TaskGroup() as tg:
             for point in overlap.points:
-                print(f"--- Set point {point.point_id} to reserved (overlap)")
+                logging.info(f"--- Set point {point.point_id} to reserved (overlap)")
                 point.state = "reserved-overlap"
 
                 # Get necessary orientation
@@ -74,7 +75,7 @@ class OverlapController(object):
         for track in overlap.segments:
             for segment_id in overlap.segments[track]:
                 if not self.is_segment_used_in_any_other_overlap(segment_id, route):
-                    print(f"--- Set track {segment_id} free")
+                    logging.info(f"--- Set track {segment_id} free")
                     track.state[segment_id] = "free"
 
     def free_points_of_overlap(self, overlap, route):

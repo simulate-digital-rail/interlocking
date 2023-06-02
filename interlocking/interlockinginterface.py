@@ -3,6 +3,7 @@ from interlocking.model import Point, Track, Signal, Route
 from interlocking.model.helper import SetRouteResult, Settings
 import asyncio
 import time
+import logging
 
 
 class Interlocking(object):
@@ -84,15 +85,15 @@ class Interlocking(object):
         self.active_routes = []
 
     def print_state(self):
-        print("##############")
+        logging.debug("##############")
         self.point_controller.print_state()
         self.track_controller.print_state()
         self.signal_controller.print_state()
 
-        print("Active Routes:")
+        logging.debug("Active Routes:")
         for active_route in self.active_routes:
-            print(active_route.to_string())
-        print("##############")
+            logging.debug(active_route.to_string())
+        logging.debug("##############")
 
     async def set_route(self, yaramo_route):
         route_formation_time_start = time.time()

@@ -1,5 +1,6 @@
 from .overlap import Overlap
 from yaramo.model import SignalDirection
+import logging
 
 
 class Route(object):
@@ -134,7 +135,7 @@ class Route(object):
                 longest_overlap = overlap
         if len(full_overlaps) > 0:
             return full_overlaps
-        print("--- Warning: No full overlap found, take the longest one")
+        logging.warning("--- Warning: No full overlap found, take the longest one")
         return [longest_overlap]
 
     def get_overlaps_of_route_recursive(self, cur_track, cur_driving_direction, cur_overlap):

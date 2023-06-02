@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 
 class PointController(object):
@@ -44,7 +45,7 @@ class PointController(object):
         if point.orientation == orientation:
             # Everything is fine
             return True
-        print(f"--- Move point {point.point_id} to {orientation}")
+        logging.info(f"--- Move point {point.point_id} to {orientation}")
         tasks = []
         async with asyncio.TaskGroup() as tg:
             for infrastructure_provider in self.infrastructure_providers:
@@ -57,11 +58,11 @@ class PointController(object):
             return False
 
     def set_point_reserved(self, point):
-        print(f"--- Set point {point.point_id} to reserved")
+        logging.info(f"--- Set point {point.point_id} to reserved")
         point.state = "reserved"
 
     def set_point_free(self, point):
-        print(f"--- Set point {point.point_id} to free")
+        logging.info(f"--- Set point {point.point_id} to free")
         point.state = "free"
 
     def reset_route(self, route):
@@ -69,7 +70,7 @@ class PointController(object):
             self.set_point_free(point)
 
     def print_state(self):
-        print("State of Points:")
+        logging.debug("State of Points:")
         for point_id in self.points:
             point = self.points[point_id]
-            print(f"{point.point_id}: {point.state} (Orientation: {point.orientation})")
+            logging.debug(f"{point.point_id}: {point.state} (Orientation: {point.orientation})")
