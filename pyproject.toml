@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "interlocking"
-version = "1.0.1"
+version = "2.0"
 description = "A simple yaramo-based interlocking logic"
 authors = ["OSMHPI <arne.boockmeyer@hpi.de>"]
 readme = "README.md"
