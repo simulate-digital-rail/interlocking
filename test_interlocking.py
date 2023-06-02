@@ -66,9 +66,10 @@ def test_01():
             _route = topology.routes[_route_uuid]
             if _route.start_signal.name == _start_signal_name and _route.end_signal.name == _end_signal_name:
                 print(f"### Set Route {_start_signal_name} -> {_end_signal_name}")
-                _could_be_set = asyncio.run(interlocking.set_route(_route))
-                assert (_could_be_set == _should_be_able_to_set)
+                _set_route_result = asyncio.run(interlocking.set_route(_route))
+                assert (_set_route_result.success == _should_be_able_to_set)
                 interlocking.print_state()
+                return _set_route_result
 
     def free_route(_start_signal_name, _end_signal_name):
         for _route_uuid in topology.routes:
@@ -86,7 +87,8 @@ def test_01():
                 interlocking.reset_route(_route)
                 interlocking.print_state()
 
-    set_route("60BS1", "60BS2", True)
+    set_route_result = set_route("60BS1", "60BS2", True)
+    print(f"Set route success: {set_route_result.success}, Route Formation Time: {set_route_result.route_formation_time}")
     # "Drive" some train
     print("Driving!")
     tds = interlocking.train_detection_controller
