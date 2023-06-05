@@ -1,40 +1,10 @@
 from planpro_importer.reader import PlanProReader
 from railwayroutegenerator.routegenerator import RouteGenerator
 from interlocking.interlockinginterface import Interlocking
-from interlocking.infrastructureprovider import InfrastructureProvider
+from interlocking.infrastructureprovider import LoggingInfrastructureProvider, RandomWaitInfrastructureProvider
 from interlocking.model.helper import Settings
-import time
-import random
 import asyncio
 import logging
-
-
-class PrintLineInfrastructureProvider(InfrastructureProvider):
-    async def turn_point(self, yaramo_point, target_orientation):
-        # Time to turn point according to
-        # https://de.wikipedia.org/wiki/Weiche_(Bahn)#Umlaufzeiten
-        wait = random.randint(5, 7)
-        point_id = yaramo_point.uuid[-5:]
-        logging.info(f"{time.strftime('%X')} Turn point {point_id} to {target_orientation} (wait {wait})")
-        await asyncio.sleep(wait)
-        if random.randint(0, 3) > 0 or True:
-            logging.info(f"{time.strftime('%X')} Completed turning point {point_id} to {target_orientation}")
-            return True
-        logging.warning(f"{time.strftime('%X')} Failed turning point {point_id} to {target_orientation}")
-        return False
-
-    async def set_signal_state(self, yaramo_signal, target_state):
-        # Time to set signal according to
-        # https://www.graefelfing.de/fileadmin/user_upload/Ortsplanung_Mobilitaet/Verkehrsplanung/Verkehrsuntersuchungen/Bahnuebergang_Brunhamstrasse/Gutachten-Schliesszeiten-Bericht.pdf
-        wait = random.randint(2, 4)
-        signal_id = yaramo_signal.uuid[-5:]
-        logging.info(f"{time.strftime('%X')} Set signal {signal_id} to {target_state} (wait {wait})")
-        await asyncio.sleep(wait)
-        if random.randint(0, 3) > 0:
-            logging.info(f"{time.strftime('%X')} Completed setting signal {signal_id} to {target_state}")
-            return True
-        logging.warning(f"{time.strftime('%X')} Failed setting signal {signal_id} to {target_state}")
-        return False
 
 
 def test_01():
@@ -57,7 +27,7 @@ def test_01():
     generator = RouteGenerator(topology)
     generator.generate_routes()
 
-    infrastructure_provider = PrintLineInfrastructureProvider()
+    infrastructure_provider = [LoggingInfrastructureProvider(), RandomWaitInfrastructureProvider(allow_fail=False)]
 
     interlocking = Interlocking(infrastructure_provider, Settings(max_number_of_points_at_same_time=3))
     interlocking.prepare(topology)
@@ -95,15 +65,15 @@ def test_01():
     if set_route_result.success:
         logging.info("Driving!")
         tds = interlocking.train_detection_controller
-        infrastructure_provider.tds_count_in("de139-1")
-        infrastructure_provider.tds_count_in("de139-2")
-        infrastructure_provider.tds_count_out("de139-1")
-        infrastructure_provider.tds_count_in("94742-0")
-        infrastructure_provider.tds_count_out("de139-2")
+        infrastructure_provider[0].tds_count_in("de139-1")
+        infrastructure_provider[0].tds_count_in("de139-2")
+        infrastructure_provider[0].tds_count_out("de139-1")
+        infrastructure_provider[0].tds_count_in("94742-0")
+        infrastructure_provider[0].tds_count_out("de139-2")
         interlocking.print_state()
-        infrastructure_provider.tds_count_in("b8e69-0")
-        infrastructure_provider.tds_count_out("94742-0")
-        infrastructure_provider.tds_count_out("b8e69-0")
+        infrastructure_provider[0].tds_count_in("b8e69-0")
+        infrastructure_provider[0].tds_count_out("94742-0")
+        infrastructure_provider[0].tds_count_out("b8e69-0")
         interlocking.print_state()
         free_route("60BS1", "60BS2")
     return
