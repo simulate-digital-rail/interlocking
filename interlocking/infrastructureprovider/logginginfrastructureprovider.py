@@ -12,7 +12,7 @@ class LoggingInfrastructureProvider(InfrastructureProvider):
         logging.info(f"{time.strftime('%X')} Set signal {yaramo_signal.name} to {target_state}")
         return True
 
-    async def turn_point(self, yaramo_point: str, target_orientation: str):
+    async def turn_point(self, yaramo_point, target_orientation: str):
         point_id = yaramo_point.uuid[-5:]
         logging.info(f"{time.strftime('%X')} Turn point {point_id} to {target_orientation}")
         return True

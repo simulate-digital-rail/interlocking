@@ -27,11 +27,17 @@ class SignalController(object):
             # Everything is fine
             return True
         logging.info(f"--- Set signal {signal.yaramo_signal.name} to {state}")
-        tasks = []
-        async with asyncio.TaskGroup() as tg:
-            for infrastructure_provider in self.infrastructure_providers:
-                tasks.append(tg.create_task(infrastructure_provider.set_signal_state(signal.yaramo_signal, state)))
-        if all(list(map(lambda task: task.result(), tasks))):
+
+        results = []
+        for infrastructure_provider in self.infrastructure_providers:
+            results.append(await infrastructure_provider.set_signal_state(signal.yaramo_signal, state))
+
+        # tasks = []
+        # async with asyncio.TaskGroup() as tg:
+        #    for infrastructure_provider in self.infrastructure_providers:
+        #        tasks.append(tg.create_task(infrastructure_provider.set_signal_state(signal.yaramo_signal, state)))
+        # if all(list(map(lambda task: task.result(), tasks))):
+        if all(results):
             signal.state = state
             return True
         else:

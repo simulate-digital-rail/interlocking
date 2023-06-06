@@ -1,6 +1,6 @@
 from interlocking.interlockingcontroller import PointController, SignalController, TrackController, TrainDetectionController
 from interlocking.model import Point, Track, Signal, Route
-from interlocking.model.helper import SetRouteResult, Settings
+from interlocking.model.helper import SetRouteResult, Settings, InterlockingOperationType
 import asyncio
 import time
 import logging
@@ -77,6 +77,27 @@ class Interlocking(object):
             route.tracks = route_tracks
 
             self.routes.append(route)
+
+    async def run_with_operations_queue(self, operations_queue):
+        next_op = await operations_queue.get()
+        while next_op.operation_type != InterlockingOperationType.EXIT:
+            op_type = next_op.operation_type
+            if op_type == InterlockingOperationType.RESET:
+                self.reset()
+            if op_type == InterlockingOperationType.PRINT_STATE:
+                self.print_state()
+            if op_type == InterlockingOperationType.SET_ROUTE:
+                await self.set_route(next_op.yaramo_route)
+            if op_type == InterlockingOperationType.FREE_ROUTE:
+                self.free_route(next_op.yaramo_route)
+            if op_type == InterlockingOperationType.RESET_ROUTE:
+                await self.reset_route(next_op.yaramo_route)
+            if op_type == InterlockingOperationType.TDS_COUNT_IN:
+                await next_op.infrastructure_provider.tds_count_in(next_op.segment_id)
+            if op_type == InterlockingOperationType.TDS_COUNT_OUT:
+                await next_op.infrastructure_provider.tds_count_out(next_op.segment_id)
+            operations_queue.task_done()
+            next_op = await operations_queue.get()
 
     def reset(self):
         self.point_controller.reset()

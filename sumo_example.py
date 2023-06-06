@@ -2,7 +2,7 @@ from planpro_importer.reader import PlanProReader
 from railwayroutegenerator.routegenerator import RouteGenerator
 from sumoexporter import SUMOExporter
 from interlocking.interlockinginterface import Interlocking
-from interlocking.model.helper import Settings
+from interlocking.model.helper import Settings, InterlockingOperation, InterlockingOperationType
 from interlocking.infrastructureprovider import LoggingInfrastructureProvider, SUMOInfrastructureProvider, RandomWaitInfrastructureProvider
 import asyncio
 import logging
@@ -39,12 +39,14 @@ def get_route_by_signal_names(start_signal_name: str, end_signal_name: str, topo
     return None
 
 
-def sumo_test():
+async def sumo_test():
     topology = prepare_yaramo_topology()
 
     traci.init(host="localhost", port=4444)
 
-    infrastructure_provider = [LoggingInfrastructureProvider(), RandomWaitInfrastructureProvider(allow_fail=False), SUMOInfrastructureProvider(traci_instance=traci)]
+    infrastructure_provider = [LoggingInfrastructureProvider(),
+                               RandomWaitInfrastructureProvider(allow_fail=False),
+                               SUMOInfrastructureProvider(traci_instance=traci)]
 
     interlocking = Interlocking(infrastructure_provider, Settings(max_number_of_points_at_same_time=3))
     interlocking.prepare(topology)
@@ -54,13 +56,25 @@ def sumo_test():
     end_signal_name = "60BS7"
 
     yaramo_route = get_route_by_signal_names(start_signal_name, end_signal_name, topology)
-    asyncio.run(interlocking.set_route(yaramo_route))
+    await interlocking.set_route(yaramo_route)
     traci.vehicle.add("Zug1", f"route_{start_signal_name}-{end_signal_name}", "regio")
+
+    operations_queue = asyncio.Queue()
+
+    async with asyncio.TaskGroup() as tg:
+        tg.create_task(interlocking.run_with_operations_queue(operations_queue))
+        tg.create_task(run_simulation(operations_queue, infrastructure_provider))
+
+
+async def run_simulation(op_queue, infrastructure_provider):
+    sumo_ip = infrastructure_provider[2]
     traci.simulationStep()
     position = traci.vehicle.getRoadID("Zug1")
     if position.endswith("-re"):
         position = position[:-3]
-    infrastructure_provider[1].tds_count_in(position)
+    op_queue.put_nowait(InterlockingOperation(InterlockingOperationType.TDS_COUNT_IN,
+                                              infrastructure_provider=sumo_ip,
+                                              segment_id=position))
     while len(traci.vehicle.getIDList()) > 0:
         traci.simulationStep()
         if len(traci.vehicle.getIDList()) == 0:
@@ -70,10 +84,15 @@ def sumo_test():
             if new_position.endswith("-re"):
                 new_position = new_position[:-3]
             if new_position != position:
-                infrastructure_provider[1].tds_count_out(position)
+                op_queue.put_nowait(InterlockingOperation(InterlockingOperationType.TDS_COUNT_OUT,
+                                                          infrastructure_provider=sumo_ip,
+                                                          segment_id=position))
                 position = new_position
-                infrastructure_provider[1].tds_count_in(position)
-        asyncio.run(asyncio.sleep(traci.simulation.getDeltaT()))
+                op_queue.put_nowait(InterlockingOperation(InterlockingOperationType.TDS_COUNT_IN,
+                                                          infrastructure_provider=sumo_ip,
+                                                          segment_id=position))
+        await asyncio.sleep(traci.simulation.getDeltaT())
+    op_queue.put_nowait(InterlockingOperation(InterlockingOperationType.EXIT))
 
 
 def create_sumo_scenario():
@@ -91,6 +110,6 @@ def create_sumo_scenario():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     if Path("./sumo-config/complex-example.scenario.sumocfg").is_file():
-        sumo_test()
+        asyncio.run(sumo_test())
     else:
         create_sumo_scenario()

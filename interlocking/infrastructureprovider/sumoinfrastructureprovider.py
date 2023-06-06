@@ -18,6 +18,6 @@ class SUMOInfrastructureProvider(InfrastructureProvider):
                 self.traci_instance.trafficlight.setRedYellowGreenState(yaramo_signal.name, "Gr")
         return True
 
-    async def turn_point(self, yaramo_point: str, target_orientation: str):
+    async def turn_point(self, yaramo_point, target_orientation: str):
         # SUMO does not support the concept of points yet.
         return True
