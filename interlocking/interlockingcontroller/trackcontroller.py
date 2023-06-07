@@ -1,6 +1,6 @@
 from .overlapcontroller import OverlapController
 from yaramo.model import SignalDirection
-from interlocking.model import TrackSegmentState
+from interlocking.model import OccupancyState
 
 
 class TrackController(object):
@@ -16,16 +16,16 @@ class TrackController(object):
         for base_track_id in self.tracks:
             track = self.tracks[base_track_id]
             for segment in track.segments:
-                segment.state = TrackSegmentState.FREE
+                segment.state = OccupancyState.FREE
 
     def set_route(self, route):
         self.reserve_route(route)
 
     def can_route_be_set(self, route):
         for segment in route.get_segments_of_route():
-            if segment.state != TrackSegmentState.FREE:
-                    print(f"{segment.segment_id} is not free")
-                    return False
+            if segment.state != OccupancyState.FREE:
+                print(f"{segment.segment_id} is not free")
+                return False
         return self.overlap_controller.can_any_overlap_be_reserved(route)
 
     def do_two_routes_collide(self, route_1, route_2):
@@ -53,7 +53,7 @@ class TrackController(object):
     def free_route(self, route):
         for segment in route.get_segments_of_route():
             print(f"--- Set track {segment.segment_id} free")
-            segment.state = TrackSegmentState.FREE
+            segment.state = OccupancyState.FREE
         self.overlap_controller.free_overlap_of_route(route)
 
     def reset_route(self, route):
@@ -62,13 +62,13 @@ class TrackController(object):
     def reserve_route(self, route):
         for segment in route.get_segments_of_route():
             print(f"--- Set track {segment.segment_id} reserved")
-            segment.state = TrackSegmentState.RESERVED
+            segment.state = OccupancyState.RESERVED
         self.overlap_controller.reserve_overlap_of_route(route)
 
     def occupy_segment_of_track(self, segment):
-        if segment.state != TrackSegmentState.OCCUPIED:
+        if segment.state != OccupancyState.OCCUPIED:
             print(f"--- Set track {segment.segment_id} occupied")
-            segment.state = TrackSegmentState.OCCUPIED
+            segment.state = OccupancyState.OCCUPIED
 
             # Set signal to halt
             pos_of_segment = segment.track.get_position_of_segment(segment)
@@ -82,9 +82,9 @@ class TrackController(object):
                     self.signal_controller.set_signal_halt(next_signal)
 
     def free_segment_of_track(self, segment):
-        if segment.state != TrackSegmentState.FREE:
+        if segment.state != OccupancyState.FREE:
             print(f"--- Set track {segment.segment_id} free")
-            segment.state = TrackSegmentState.FREE
+            segment.state = OccupancyState.FREE
 
             # Free point
             pos_of_segment = segment.track.get_position_of_segment(segment)

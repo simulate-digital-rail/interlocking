@@ -1,4 +1,4 @@
-from interlocking.model import TrackSegmentState
+from interlocking.model import OccupancyState
 
 
 class OverlapController(object):
@@ -25,7 +25,7 @@ class OverlapController(object):
 
     def can_overlap_be_reserved(self, overlap):
         for segment in overlap.segments:
-            if segment.state != TrackSegmentState.FREE and segment.state != TrackSegmentState.RESERVED_OVERLAP:
+            if segment.state != OccupancyState.FREE and segment.state != OccupancyState.RESERVED_OVERLAP:
                 return False
         for point in overlap.points:
             if point.state != "free" and point.state != "reserved-overlap":
@@ -38,7 +38,7 @@ class OverlapController(object):
     def reserve_segments_of_overlap(self, overlap):
         for segment in overlap.segments:
             print(f"--- Set track {segment.segment_id} reserved (overlap)")
-            segment.state = TrackSegmentState.RESERVED_OVERLAP
+            segment.state = OccupancyState.RESERVED_OVERLAP
 
     def reserve_points_of_overlap(self, overlap):
         for point in overlap.points:
@@ -68,7 +68,7 @@ class OverlapController(object):
         for segment in overlap.segments:
             if not self.is_segment_used_in_any_other_overlap(segment, route):
                 print(f"--- Set track {segment.segment_id} free")
-                segment.state = TrackSegmentState.FREE
+                segment.state = OccupancyState.FREE
 
     def free_points_of_overlap(self, overlap, route):
         for point in overlap.points:
