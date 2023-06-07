@@ -11,22 +11,25 @@ class TrainDetectionController(object):
         if track_segment_id not in self.state:
             self.state[track_segment_id] = 0
         self.state[track_segment_id] = self.state[track_segment_id] + 1
-        self.track_controller.occupy_segment_of_track(self.get_track_of_segment_id(track_segment_id), track_segment_id)
+        self.track_controller.occupy_segment_of_track(self.get_segment_by_segment_id(track_segment_id))
 
     def count_out(self, track_segment_id):
         if track_segment_id not in self.state:
             raise ValueError("Train removed from non existing track")
         self.state[track_segment_id] = self.state[track_segment_id] - 1
         if self.state[track_segment_id] == 0:
-            self.track_controller.free_segment_of_track(self.get_track_of_segment_id(track_segment_id),
-                                                        track_segment_id)
+            self.track_controller.free_segment_of_track(self.get_segment_by_segment_id(track_segment_id))
 
     def reset_track_segments_of_route(self, route):
         for track_segment_id in route.get_segments_of_route():
             self.state[track_segment_id] = 0
 
-    def get_track_of_segment_id(self, track_segment_id):
-        for track_key in self.track_controller.tracks:
-            track = self.track_controller.tracks[track_key]
-            if track_segment_id in track.state:
-                return track
+    def get_segment_by_segment_id(self, segment_id):
+        if segment_id.endswith("-re"):
+            segment_id = segment_id[:-3]
+        for track_id in self.track_controller.tracks:
+            track = self.track_controller.tracks[track_id]
+            for segment in track.segments:
+                if segment.segment_id == segment_id:
+                    return segment
+        return None

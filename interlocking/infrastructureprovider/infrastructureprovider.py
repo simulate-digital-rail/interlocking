@@ -36,12 +36,12 @@ class InfrastructureProvider(ABC):
         self.tds_count_in_callback = tds_count_in_callback
 
     def tds_count_in(self, track_segment_id: str):
-        """Adds a train to the segment identified by the `segment_id`"""
+        """Adds a train to the tracksegment.py identified by the `segment_id`"""
         self.tds_count_in_callback(track_segment_id)
 
     def _set_tds_count_out_callback(self, tds_count_out_callback):
         self.tds_count_out_callback = tds_count_out_callback
 
     def tds_count_out(self, track_segment_id):
-        """Removes a train to the segment identified by the `segment_id`"""
+        """Removes a train to the tracksegment.py identified by the `segment_id`"""
         self.tds_count_out_callback(track_segment_id)

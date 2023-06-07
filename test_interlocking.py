@@ -67,19 +67,32 @@ def test_01():
 
     # "Drive" some train
     print("Driving!")
-    tds = interlocking.train_detection_controller
     infrastructure_provider.tds_count_in("de139-1")
     infrastructure_provider.tds_count_in("de139-2")
     infrastructure_provider.tds_count_out("de139-1")
     infrastructure_provider.tds_count_in("94742-0")
     infrastructure_provider.tds_count_out("de139-2")
-    interlocking.print_state()
     infrastructure_provider.tds_count_in("b8e69-0")
     infrastructure_provider.tds_count_out("94742-0")
-    infrastructure_provider.tds_count_out("b8e69-0")
     interlocking.print_state()
-    free_route("60BS1", "60BS2")
 
+    # Now the train is on the last tracksegment.py of the track, lets set the next route
+    set_route("60BS2", "60BS3", True)
+    interlocking.print_state()
+    infrastructure_provider.tds_count_in("b8e69-1")
+    infrastructure_provider.tds_count_out("b8e69-0")
+    free_route("60BS1", "60BS2")
+    infrastructure_provider.tds_count_in("b8e69-2")
+    infrastructure_provider.tds_count_out("b8e69-1")
+    infrastructure_provider.tds_count_in("b8e69-3")
+    infrastructure_provider.tds_count_out("b8e69-2")
+    infrastructure_provider.tds_count_in("a8f44-0")
+    infrastructure_provider.tds_count_out("b8e69-3")
+    infrastructure_provider.tds_count_out("a8f44-0")
+    interlocking.print_state()
+    free_route("60BS2", "60BS3")
+
+    return
     set_route("60ES2", "60AS4", True)
     set_route("60ES2", "60AS3", False)
 

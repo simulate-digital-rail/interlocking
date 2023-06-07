@@ -1,3 +1,6 @@
+from interlocking.model import TrackSegmentState
+
+
 class OverlapController(object):
 
     def __init__(self, interlocking, track_controller, point_controller):
@@ -21,10 +24,9 @@ class OverlapController(object):
         return None
 
     def can_overlap_be_reserved(self, overlap):
-        for track in overlap.segments:
-            for segment_id in overlap.segments[track]:
-                if track.state[segment_id] != "free" and track.state[segment_id] != "reserved-overlap":
-                    return False
+        for segment in overlap.segments:
+            if segment.state != TrackSegmentState.FREE and segment.state != TrackSegmentState.RESERVED_OVERLAP:
+                return False
         for point in overlap.points:
             if point.state != "free" and point.state != "reserved-overlap":
                 return False
@@ -34,10 +36,9 @@ class OverlapController(object):
         return self.get_first_reservable_overlap(route) is not None
 
     def reserve_segments_of_overlap(self, overlap):
-        for track in overlap.segments:
-            for segment_id in overlap.segments[track]:
-                print(f"--- Set track {segment_id} reserved (overlap)")
-                track.state[segment_id] = "reserved-overlap"
+        for segment in overlap.segments:
+            print(f"--- Set track {segment.segment_id} reserved (overlap)")
+            segment.state = TrackSegmentState.RESERVED_OVERLAP
 
     def reserve_points_of_overlap(self, overlap):
         for point in overlap.points:
@@ -64,26 +65,24 @@ class OverlapController(object):
         self.free_points_of_overlap(overlap, route)
 
     def free_segments_of_overlap(self, overlap, route):
-        for track in overlap.segments:
-            for segment_id in overlap.segments[track]:
-                if not self.is_segment_used_in_any_other_overlap(segment_id, route):
-                    print(f"--- Set track {segment_id} free")
-                    track.state[segment_id] = "free"
+        for segment in overlap.segments:
+            if not self.is_segment_used_in_any_other_overlap(segment, route):
+                print(f"--- Set track {segment.segment_id} free")
+                segment.state = TrackSegmentState.FREE
 
     def free_points_of_overlap(self, overlap, route):
         for point in overlap.points:
             if not self.is_point_used_in_any_other_overlap(point, route):
                 self.point_controller.set_point_free(point)
 
-    def is_segment_used_in_any_other_overlap(self, segment_id, route):
+    def is_segment_used_in_any_other_overlap(self, segment, route):
         for active_route in self.interlocking.active_routes:
             if active_route.id != route.id:
                 overlap_of_active_route = active_route.overlap
                 if overlap_of_active_route is None:
                     raise ValueError("An active route has no overlap object")
-                for track in overlap_of_active_route.segments:
-                    if segment_id in overlap_of_active_route.segments[track]:
-                        return True
+                if segment.segment_id in set(map(lambda seg: seg.segment_id, overlap_of_active_route.segments)):
+                    return True
         return False
 
     def is_point_used_in_any_other_overlap(self, point, route):

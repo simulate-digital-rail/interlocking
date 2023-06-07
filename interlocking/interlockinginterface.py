@@ -52,7 +52,7 @@ class Interlocking(object):
                 if signal.yaramo_signal.edge.uuid == edge.uuid:
                     signals_of_track.append(signal)
                     signal.track = track
-            track.set_signals(signals_of_track)
+            track.prepare_with_signals(signals_of_track)
 
             tracks[track.base_track_id] = track
 
