@@ -26,8 +26,8 @@ class Track(object):
             self.segments.append(segment)
 
     def get_position_of_segment(self, segment):
-        for i, segment in enumerate(self.segments):
-            if segment.segment_id == segment.segment_id:
+        for i, _segment in enumerate(self.segments):
+            if _segment.segment_id == segment.segment_id:
                 return i
         return -1
 

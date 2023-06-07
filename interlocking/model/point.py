@@ -9,7 +9,7 @@ class Point(object):
         self.point_id = self.yaramo_node.uuid[-5:]
         self.orientation = "undefined"  # either left, right or undefined
         self.state = OccupancyState.FREE
-        self.used_by = []  # If point is reserved, occupied or part of an overlap, this contains the train number(s).
+        self.used_by = set()  # If point is reserved, occupied or part of an overlap, this contains the train numbers.
         self.head = None
         self.left = None
         self.right = None
@@ -42,6 +42,9 @@ class Point(object):
         #        self.left = track
         #    elif connection_direction == NodeConnectionDirection.Rechts:
         #        self.right = track
+
+    def is_only_used_by_train(self, train_id: str):
+        return len(self.used_by) == 1 and train_id in self.used_by
 
     def is_track_connected(self, track):
         return track.base_track_id in {self.head.base_track_id, self.left.base_track_id, self.right.base_track_id}

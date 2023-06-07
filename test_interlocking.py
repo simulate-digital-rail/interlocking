@@ -45,7 +45,7 @@ def test_01():
                 print(f"### Set Route {_start_signal_name} -> {_end_signal_name}")
                 _could_be_set = interlocking.set_route(_route, _train_id)
                 assert (_could_be_set == _should_be_able_to_set)
-                interlocking.print_state()
+                #interlocking.print_state()
 
     def free_route(_start_signal_name, _end_signal_name, _train_id):
         for _route_uuid in topology.routes:
@@ -53,7 +53,7 @@ def test_01():
             if _route.start_signal.name == _start_signal_name and _route.end_signal.name == _end_signal_name:
                 print(f"### Free Route {_start_signal_name} -> {_end_signal_name}")
                 interlocking.free_route(_route, _train_id)
-                interlocking.print_state()
+                #interlocking.print_state()
 
     def reset_route(_start_signal_name, _end_signal_name, _train_id):
         for _route_uuid in topology.routes:
@@ -61,9 +61,12 @@ def test_01():
             if _route.start_signal.name == _start_signal_name and _route.end_signal.name == _end_signal_name:
                 print(f"### Reset Route {_start_signal_name} -> {_end_signal_name}")
                 interlocking.reset_route(_route, _train_id)
-                interlocking.print_state()
+                #interlocking.print_state()
 
     set_route("60BS1", "60BS2", True, "RB101")
+    interlocking.print_state()
+    set_route("60BS2", "60BS3", True, "RB101")
+    interlocking.print_state()
 
     # "Drive" some train
     print("Driving!")
@@ -74,14 +77,10 @@ def test_01():
     infrastructure_provider.tds_count_out("de139-2", "RB101")
     infrastructure_provider.tds_count_in("b8e69-0", "RB101")
     infrastructure_provider.tds_count_out("94742-0", "RB101")
-    interlocking.print_state()
-
-    # Now the train is on the last tracksegment.py of the track, lets set the next route
-    set_route("60BS2", "60BS3", True, "RB101")
-    interlocking.print_state()
     infrastructure_provider.tds_count_in("b8e69-1", "RB101")
     infrastructure_provider.tds_count_out("b8e69-0", "RB101")
     free_route("60BS1", "60BS2", "RB101")
+    interlocking.print_state()
     infrastructure_provider.tds_count_in("b8e69-2", "RB101")
     infrastructure_provider.tds_count_out("b8e69-1", "RB101")
     infrastructure_provider.tds_count_in("b8e69-3", "RB101")
@@ -91,7 +90,7 @@ def test_01():
     infrastructure_provider.tds_count_out("a8f44-0", "RB101")
     interlocking.print_state()
     free_route("60BS2", "60BS3", "RB101")
-
+    interlocking.print_state()
     return
     set_route("60ES2", "60AS4", True, "RB101")
     set_route("60ES2", "60AS3", False, "RB101")

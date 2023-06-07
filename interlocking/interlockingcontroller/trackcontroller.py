@@ -17,17 +17,20 @@ class TrackController(object):
             track = self.tracks[base_track_id]
             for segment in track.segments:
                 segment.state = OccupancyState.FREE
-                segment.used_by = []
+                segment.used_by = set()
 
     def set_route(self, route, train_id: str):
         self.reserve_route(route, train_id)
 
-    def can_route_be_set(self, route):
+    def can_route_be_set(self, route, train_id: str):
         for segment in route.get_segments_of_route():
-            if segment.state != OccupancyState.FREE:
-                print(f"{segment.segment_id} is not free")
-                return False
-        return self.overlap_controller.can_any_overlap_be_reserved(route)
+            if segment.state == OccupancyState.FREE:
+                continue
+            if segment.is_only_used_by_train(train_id):
+                continue
+            print(f"{segment.segment_id} is used by other train")
+            return False
+        return self.overlap_controller.can_any_overlap_be_reserved(route, train_id)
 
     def do_two_routes_collide(self, route_1, route_2):
         segments_of_route_1 = set(map(lambda seg: seg.segment_id, route_1.get_segments_of_route))
@@ -53,9 +56,10 @@ class TrackController(object):
 
     def free_route(self, route, train_id: str):
         for segment in route.get_segments_of_route():
-            print(f"--- Set track {segment.segment_id} free")
-            segment.state = OccupancyState.FREE
-            segment.used_by.remove(train_id)
+            if segment.state != OccupancyState.FREE:
+                print(f"--- Set track {segment.segment_id} free")
+                segment.state = OccupancyState.FREE
+                segment.used_by.remove(train_id)
         self.overlap_controller.free_overlap_of_route(route, train_id)
 
     def reset_route(self, route, train_id: str):
@@ -65,7 +69,7 @@ class TrackController(object):
         for segment in route.get_segments_of_route():
             print(f"--- Set track {segment.segment_id} reserved")
             segment.state = OccupancyState.RESERVED
-            segment.used_by.append(train_id)
+            segment.used_by.add(train_id)
         self.overlap_controller.reserve_overlap_of_route(route, train_id)
 
     def occupy_segment_of_track(self, segment, train_id: str):

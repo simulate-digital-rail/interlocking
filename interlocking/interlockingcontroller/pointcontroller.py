@@ -11,7 +11,7 @@ class PointController(object):
         for point_id in self.points:
             self.points[point_id].orientation = "undefined"
             self.points[point_id].state = OccupancyState.FREE
-            self.points[point_id].used_by = []
+            self.points[point_id].used_by = set()
 
     def set_route(self, route, train_id: str):
         for point_orientations in route.get_necessary_point_orientations():
@@ -23,10 +23,13 @@ class PointController(object):
             else:
                 raise ValueError("Turn should happen but is not possible")
 
-    def can_route_be_set(self, route):
+    def can_route_be_set(self, route, train_id: str):
         for point in route.get_points_of_route():
-            if point.state != OccupancyState.FREE:
-                return False
+            if point.state == OccupancyState.FREE:
+                continue
+            if point.is_only_used_by_train(train_id):
+                continue
+            return False
         return True
 
     def do_two_routes_collide(self, route_1, route_2):
@@ -46,12 +49,13 @@ class PointController(object):
     def set_point_reserved(self, point, train_id: str):
         print(f"--- Set point {point.point_id} to reserved")
         point.state = OccupancyState.RESERVED
-        point.used_by.append(train_id)
+        point.used_by.add(train_id)
 
     def set_point_free(self, point, train_id: str):
-        print(f"--- Set point {point.point_id} to free")
-        point.state = OccupancyState.FREE
-        point.used_by.remove(train_id)
+        if point.state != OccupancyState.FREE:
+            print(f"--- Set point {point.point_id} to free")
+            point.state = OccupancyState.FREE
+            point.used_by.remove(train_id)
 
     def reset_route(self, route, train_id: str):
         for point in route.get_points_of_route():
