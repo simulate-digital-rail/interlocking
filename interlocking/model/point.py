@@ -9,6 +9,7 @@ class Point(object):
         self.point_id = self.yaramo_node.uuid[-5:]
         self.orientation = "undefined"  # either left, right or undefined
         self.state = OccupancyState.FREE
+        self.used_by = []  # If point is reserved, occupied or part of an overlap, this contains the train number(s).
         self.head = None
         self.left = None
         self.right = None
