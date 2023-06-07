@@ -1,4 +1,6 @@
 from yaramo.model import NodeConnectionDirection
+from .occupancystate import OccupancyState
+
 
 class Point(object):
 
@@ -6,7 +8,7 @@ class Point(object):
         self.yaramo_node = yaramo_node
         self.point_id = self.yaramo_node.uuid[-5:]
         self.orientation = "undefined"  # either left, right or undefined
-        self.state = "free"  # either free or reserved
+        self.state = OccupancyState.FREE
         self.head = None
         self.left = None
         self.right = None

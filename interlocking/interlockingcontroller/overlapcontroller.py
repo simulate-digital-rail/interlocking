@@ -28,7 +28,7 @@ class OverlapController(object):
             if segment.state != OccupancyState.FREE and segment.state != OccupancyState.RESERVED_OVERLAP:
                 return False
         for point in overlap.points:
-            if point.state != "free" and point.state != "reserved-overlap":
+            if point.state != OccupancyState.FREE and point.state != OccupancyState.RESERVED_OVERLAP:
                 return False
         return True
 
@@ -43,7 +43,7 @@ class OverlapController(object):
     def reserve_points_of_overlap(self, overlap):
         for point in overlap.points:
             print(f"--- Set point {point.point_id} to reserved (overlap)")
-            point.state = "reserved-overlap"
+            point.state = OccupancyState.RESERVED_OVERLAP
 
             # Get necessary orientation
             points_tracks = [point.head, point.left, point.right]

@@ -1,3 +1,6 @@
+from interlocking.model import OccupancyState
+
+
 class PointController(object):
 
     def __init__(self, infrastructure_providers):
@@ -21,7 +24,7 @@ class PointController(object):
 
     def can_route_be_set(self, route):
         for point in route.get_points_of_route():
-            if point.state != "free":
+            if point.state != OccupancyState.FREE:
                 return False
         return True
 
@@ -41,11 +44,11 @@ class PointController(object):
 
     def set_point_reserved(self, point):
         print(f"--- Set point {point.point_id} to reserved")
-        point.state = "reserved"
+        point.state = OccupancyState.RESERVED
 
     def set_point_free(self, point):
         print(f"--- Set point {point.point_id} to free")
-        point.state = "free"
+        point.state = OccupancyState.FREE
 
     def reset_route(self, route):
         for point in route.get_points_of_route():
