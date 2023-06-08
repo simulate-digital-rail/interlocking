@@ -58,7 +58,7 @@ class OverlapController(object):
                 points_tracks = [point.head, point.left, point.right]
                 found_tracks = []
                 for track in points_tracks:
-                    if track in overlap.segments:
+                    if track in set(map(lambda seg: seg.track, overlap.segments)):
                         found_tracks.append(track)
 
                 if len(found_tracks) != 2:
