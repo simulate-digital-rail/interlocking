@@ -31,6 +31,12 @@ class Track(object):
                 return i
         return -1
 
+    def is_first_segment(self, segment):
+        return self.segments[0].segment_id == segment.segment_id
+
+    def is_last_segment(self, segment):
+        return self.segments[-1].segment_id == segment.segment_id
+
     def get_position_of_signal(self, signal):
         for i, _signal in enumerate(self.signals):
             if _signal.yaramo_signal.uuid == signal.yaramo_signal.uuid:

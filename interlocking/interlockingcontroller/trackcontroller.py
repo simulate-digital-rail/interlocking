@@ -111,8 +111,8 @@ class TrackController(object):
             segment.used_by.remove(train_id)
 
             # Free point
-            pos_of_segment = segment.track.get_position_of_segment(segment)
-            if pos_of_segment == 0 or pos_of_segment == len(segment.track.signals) + 1:
+            track = segment.track
+            if track.is_first_segment(segment) or track.is_last_segment(segment):
                 route = None
                 for active_route in self.interlocking.active_routes:
                     if active_route.contains_segment(segment):
@@ -123,11 +123,11 @@ class TrackController(object):
 
                 driving_direction = route.get_driving_direction_of_track_on_route(segment.track)
 
-                if pos_of_segment == 0 and driving_direction == "in" and \
+                if track.is_first_segment(segment) and driving_direction == "in" and \
                         segment.track.left_point.state != OccupancyState.FREE:
                     # The occupancy state of the previous point can be free, when the train starts on this segment
                     self.point_controller.set_point_free(segment.track.left_point, train_id)
-                elif pos_of_segment == len(segment.track.signals) + 1 and driving_direction == "gegen" and \
+                elif track.is_last_segment(segment) and driving_direction == "gegen" and \
                         segment.track.right_point.state != OccupancyState.FREE:
                     self.point_controller.set_point_free(segment.track.right_point, train_id)
 
