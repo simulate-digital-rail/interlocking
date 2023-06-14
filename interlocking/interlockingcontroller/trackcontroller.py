@@ -6,7 +6,7 @@ from interlocking.model import OccupancyState
 class TrackController(object):
 
     def __init__(self, interlocking, point_controller, signal_controller):
-        self.tracks = []
+        self.tracks = {}
         self.interlocking = interlocking
         self.point_controller = point_controller
         self.signal_controller = signal_controller
@@ -33,26 +33,35 @@ class TrackController(object):
         return self.overlap_controller.can_any_overlap_be_reserved(route, train_id)
 
     def do_two_routes_collide(self, route_1, route_2):
-        segments_of_route_1 = set(map(lambda seg: seg.segment_id, route_1.get_segments_of_route))
-        segments_of_route_2 = set(map(lambda seg: seg.segment_id, route_2.get_segments_of_route))
+        segments_of_route_1 = set(map(lambda seg: seg.segment_id, route_1.get_segments_of_route()))
+        segments_of_route_2 = set(map(lambda seg: seg.segment_id, route_2.get_segments_of_route()))
         if len(segments_of_route_1.intersection(segments_of_route_2)) > 0:
             return True
 
         overlaps_of_route_1 = route_1.get_overlaps_of_route()
-        found_no_free_overlap_route_1 = True
-        for overlap in overlaps_of_route_1:
-            overlap_segments = set(map(lambda seg: seg.segment_id, overlap.segments))
-            if len(overlap_segments.intersection(segments_of_route_2)) == 0:
-                found_no_free_overlap_route_1 = False
-                break
+        no_non_colliding_overlap_for_route_1 = True
+        if len(overlaps_of_route_1) > 0:
+            for overlap in overlaps_of_route_1:
+                overlap_segments = set(map(lambda seg: seg.segment_id, overlap.segments))
+                if len(overlap_segments.intersection(segments_of_route_2)) == 0:  # Non-colliding overlap found
+                    no_non_colliding_overlap_for_route_1 = False
+                    break
+        else:
+            # No overlap necessary, so assume that there is non-colliding overlap
+            no_non_colliding_overlap_for_route_1 = False
+
         overlaps_of_route_2 = route_2.get_overlaps_of_route()
-        found_no_free_overlap_route_2 = True
-        for overlap in overlaps_of_route_2:
-            overlap_segments = set(map(lambda seg: seg.segment_id, overlap.segments))
-            if len(overlap_segments.intersection(segments_of_route_1)) == 0:
-                found_no_free_overlap_route_2 = False
-                break
-        return found_no_free_overlap_route_1 or found_no_free_overlap_route_2
+        no_non_colliding_overlap_for_route_2 = True
+        if len(overlaps_of_route_2) > 0:
+            for overlap in overlaps_of_route_2:
+                overlap_segments = set(map(lambda seg: seg.segment_id, overlap.segments))
+                if len(overlap_segments.intersection(segments_of_route_1)) == 0:  # Non-colliding overlap found
+                    no_non_colliding_overlap_for_route_2 = False
+                    break
+        else:
+            # No overlap necessary, so assume that there is non-colliding overlap
+            no_non_colliding_overlap_for_route_2 = False
+        return no_non_colliding_overlap_for_route_1 or no_non_colliding_overlap_for_route_2
 
     def free_route(self, route, train_id: str):
         for segment in route.get_segments_of_route():
