@@ -1,6 +1,7 @@
 from .overlapcontroller import OverlapController
 from yaramo.model import SignalDirection
 from interlocking.model import OccupancyState
+import logging
 
 
 class TrackController(object):
@@ -66,13 +67,17 @@ class TrackController(object):
     def free_route(self, route, train_id: str):
         for segment in route.get_segments_of_route():
             if segment.state != OccupancyState.FREE:
+                logging.error(f"You are freeing a route where at least one segment is not free "
+                              f"(segment id: {segment.segment_id})")
+        self.overlap_controller.free_overlap_of_route(route, train_id)
+
+    def reset_route(self, route, train_id: str):
+        for segment in route.get_segments_of_route():
+            if segment.state != OccupancyState.FREE:
                 print(f"--- Set track {segment.segment_id} free")
                 segment.state = OccupancyState.FREE
                 segment.used_by.remove(train_id)
         self.overlap_controller.free_overlap_of_route(route, train_id)
-
-    def reset_route(self, route, train_id: str):
-        self.free_route(route, train_id)
 
     def reserve_route(self, route, train_id: str):
         for segment in route.get_segments_of_route():
