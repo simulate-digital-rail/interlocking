@@ -8,10 +8,10 @@ class SignalController(object):
         self.signals = None
         self.infrastructure_providers = infrastructure_providers
 
-    def reset(self):
+    async def reset(self):
         # Run non-concurrently
         for signal_id in self.signals:
-            asyncio.run(self.set_signal_halt(self.signals[signal_id]))
+            await self.set_signal_halt(self.signals[signal_id])
 
     async def set_route(self, route):
         return await self.set_signal_go(route.start_signal)

@@ -13,11 +13,11 @@ class Route(object):
         self.tracks = []
         self.overlap = None
 
-    def contains_segment(self, segment_id):
+    def contains_segment(self, segment):
         for track in self.tracks:
-            if segment_id in track.state:
-                return track
-        return None
+            if segment.segment_id in set(map(lambda seg: seg.segment_id, track.segments)):
+                return True
+        return False
 
     def get_driving_direction_of_track_on_route(self, track):
         if len(self.tracks) == 0:
@@ -41,13 +41,7 @@ class Route(object):
         raise ValueError("Route does not contain track")
 
     def get_last_segment_of_route(self):
-        last_track = self.tracks[-1]
-        pos_of_signal = last_track.get_position_of_signal(self.end_signal)
-        if pos_of_signal == -1:
-            raise ValueError("End signal not on last track")
-        if self.end_signal.yaramo_signal.direction == SignalDirection.IN:
-            return f"{last_track.base_track_id}-{pos_of_signal}"
-        return f"{last_track.base_track_id}-{pos_of_signal+1}"
+        return self.get_segments_of_route()[-1]
 
     def get_points_of_route(self):
         result = set()
@@ -83,21 +77,16 @@ class Route(object):
         return result
 
     def get_segments_of_route(self):
-        result = dict()
-
         if self.start_signal.track.base_track_id == self.end_signal.track.base_track_id:
             # Start signal and end signal are on the same track
             pos_start_signal = self.start_signal.track.get_position_of_signal(self.start_signal)
             pos_end_signal = self.end_signal.track.get_position_of_signal(self.end_signal)
-            result[self.start_signal.track.base_track_id] = self.start_signal\
-                .track.get_segments_of_range(pos_start_signal + 1, pos_end_signal + 1)
-        else:
-            result[self.start_signal.track.base_track_id] = self.start_signal.track.\
-                get_segments_from_signal(self.start_signal)
-            for i in range(1, len(self.tracks) - 1):
-                result[self.tracks[i].base_track_id] = self.tracks[i].get_all_segments_of_track()
-            result[self.end_signal.track.base_track_id] = self.end_signal.track.\
-                get_segments_to_signal(self.end_signal)
+            return self.start_signal.track.segments[pos_start_signal + 1:pos_end_signal + 1]
+
+        result = self.start_signal.track.get_segments_from_signal(self.start_signal)
+        for track in self.tracks[1:-1]:
+            result = result + track.segments
+        result = result + self.end_signal.track.get_segments_to_signal(self.end_signal)
         return result
 
     def get_overlaps_of_route(self):
@@ -118,8 +107,8 @@ class Route(object):
         last_track = self.end_signal.track
         segments_from_end_signal = last_track.get_segments_from_signal(self.end_signal)
 
-        for segment_id in segments_from_end_signal:
-            overlap_obj.add_segment(last_track, segment_id)
+        for segment in segments_from_end_signal:
+            overlap_obj.add_segment(segment)
             if overlap_obj.is_full():
                 return [overlap_obj]
 
@@ -154,13 +143,13 @@ class Route(object):
             if successor_track.right_point.point_id == next_point.point_id:
                 driving_direction = SignalDirection.GEGEN
             if driving_direction == SignalDirection.IN:
-                for segment_id in successor_track.lengths:
-                    new_overlap.add_segment(successor_track, segment_id)
+                for segment in successor_track.segments:
+                    new_overlap.add_segment(segment)
                     if new_overlap.is_full():
                         break
             else:
-                for segment_id in reversed(successor_track.lengths):
-                    new_overlap.add_segment(successor_track, segment_id)
+                for segment in reversed(successor_track.segments):
+                    new_overlap.add_segment(segment)
                     if new_overlap.is_full():
                         break
             results.append(new_overlap)
