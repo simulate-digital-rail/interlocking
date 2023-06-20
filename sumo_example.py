@@ -56,7 +56,7 @@ async def sumo_test():
     end_signal_name = "60BS7"
 
     yaramo_route = get_route_by_signal_names(start_signal_name, end_signal_name, topology)
-    await interlocking.set_route(yaramo_route)
+    await interlocking.set_route(yaramo_route, "RB101")
     traci.vehicle.add("Zug1", f"route_{start_signal_name}-{end_signal_name}", "regio")
 
     operations_queue = asyncio.Queue()
@@ -73,6 +73,7 @@ async def run_simulation(op_queue, infrastructure_provider):
     if position.endswith("-re"):
         position = position[:-3]
     op_queue.put_nowait(InterlockingOperation(InterlockingOperationType.TDS_COUNT_IN,
+                                              "RB101",
                                               infrastructure_provider=sumo_ip,
                                               segment_id=position))
     while len(traci.vehicle.getIDList()) > 0:
@@ -85,10 +86,12 @@ async def run_simulation(op_queue, infrastructure_provider):
                 new_position = new_position[:-3]
             if new_position != position:
                 op_queue.put_nowait(InterlockingOperation(InterlockingOperationType.TDS_COUNT_OUT,
+                                                          "RB101",
                                                           infrastructure_provider=sumo_ip,
                                                           segment_id=position))
                 position = new_position
                 op_queue.put_nowait(InterlockingOperation(InterlockingOperationType.TDS_COUNT_IN,
+                                                          "RB101",
                                                           infrastructure_provider=sumo_ip,
                                                           segment_id=position))
         await asyncio.sleep(traci.simulation.getDeltaT())

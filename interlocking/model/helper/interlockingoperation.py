@@ -20,10 +20,12 @@ class InterlockingOperation(object):
 
     def __init__(self,
                  operation_type: InterlockingOperationType,
+                 train_id: str = None,
                  yaramo_route=None,
                  infrastructure_provider=None,
                  segment_id=""):
         self.operation_type = operation_type
+        self.train_id = train_id
         self.yaramo_route = yaramo_route
         self.infrastructure_provider = infrastructure_provider
         self.segment_id = segment_id

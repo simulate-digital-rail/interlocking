@@ -83,19 +83,19 @@ class Interlocking(object):
         while next_op.operation_type != InterlockingOperationType.EXIT:
             op_type = next_op.operation_type
             if op_type == InterlockingOperationType.RESET:
-                self.reset()
+                await self.reset()
             if op_type == InterlockingOperationType.PRINT_STATE:
                 self.print_state()
             if op_type == InterlockingOperationType.SET_ROUTE:
-                await self.set_route(next_op.yaramo_route)
+                await self.set_route(next_op.yaramo_route, next_op.train_id)
             if op_type == InterlockingOperationType.FREE_ROUTE:
-                self.free_route(next_op.yaramo_route)
+                self.free_route(next_op.yaramo_route, next_op.train_id)
             if op_type == InterlockingOperationType.RESET_ROUTE:
-                await self.reset_route(next_op.yaramo_route)
+                await self.reset_route(next_op.yaramo_route, next_op.train_id)
             if op_type == InterlockingOperationType.TDS_COUNT_IN:
-                await next_op.infrastructure_provider.tds_count_in(next_op.segment_id)
+                await next_op.infrastructure_provider.tds_count_in(next_op.segment_id, next_op.train_id)
             if op_type == InterlockingOperationType.TDS_COUNT_OUT:
-                await next_op.infrastructure_provider.tds_count_out(next_op.segment_id)
+                await next_op.infrastructure_provider.tds_count_out(next_op.segment_id, next_op.train_id)
             operations_queue.task_done()
             next_op = await operations_queue.get()
 
@@ -133,10 +133,10 @@ class Interlocking(object):
         if point_task.result() and track_task.result():
             set_route_result.success = await self.signal_controller.set_route(route)
             if not set_route_result.success:
-                await self.reset_route(yaramo_route)
+                await self.reset_route(yaramo_route, train_id)
         else:
             # Set route failed, so the route has to be reset
-            await self.reset_route(yaramo_route)
+            await self.reset_route(yaramo_route, train_id)
             set_route_result.success = False
         set_route_result.route_formation_time = time.time() - route_formation_time_start
         return set_route_result
