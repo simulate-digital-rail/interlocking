@@ -1,6 +1,7 @@
 from interlocking.interlockingcontroller import PointController, SignalController, TrackController, TrainDetectionController
 from interlocking.model import Point, Track, Signal, Route
 from interlocking.model.helper import SetRouteResult, Settings, InterlockingOperationType
+from interlockinglogicmonitor import InterlockingLogicMonitor
 import asyncio
 import time
 import logging
@@ -8,11 +9,15 @@ import logging
 
 class Interlocking(object):
 
-    def __init__(self, infrastructure_providers, settings=Settings()):
+    def __init__(self,
+                 infrastructure_providers,
+                 settings=Settings(),
+                 interlocking_logic_monitor: InterlockingLogicMonitor = None):
         if not isinstance(infrastructure_providers, list):
             infrastructure_providers = [infrastructure_providers]
         self.infrastructure_providers = infrastructure_providers
         self.settings = settings
+        self.interlocking_logic_monitor = interlocking_logic_monitor
 
         self.point_controller = PointController(self.infrastructure_providers, self.settings)
         self.signal_controller = SignalController(self.infrastructure_providers)
@@ -139,6 +144,7 @@ class Interlocking(object):
             await self.reset_route(yaramo_route, train_id)
             set_route_result.success = False
         set_route_result.route_formation_time = time.time() - route_formation_time_start
+        self.interlocking_logic_monitor.monitor_set_route(yaramo_route)
         return set_route_result
 
     def can_route_be_set(self, yaramo_route, train_id: str):
@@ -158,6 +164,7 @@ class Interlocking(object):
         route = self.get_route_from_yaramo_route(yaramo_route)
         self.track_controller.free_route(route, train_id)
         self.active_routes.remove(route)
+        self.interlocking_logic_monitor.monitor_free_route(yaramo_route)
 
     async def reset_route(self, yaramo_route, train_id: str):
         route = self.get_route_from_yaramo_route(yaramo_route)
@@ -166,6 +173,7 @@ class Interlocking(object):
         self.train_detection_controller.reset_track_segments_of_route(route)
         await self.signal_controller.reset_route(route)
         self.active_routes.remove(route)
+        self.interlocking_logic_monitor.monitor_reset_route(yaramo_route)
 
     def get_route_from_yaramo_route(self, yaramo_route):
         for route in self.routes:

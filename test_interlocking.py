@@ -3,6 +3,7 @@ from railwayroutegenerator.routegenerator import RouteGenerator
 from interlocking.interlockinginterface import Interlocking
 from interlocking.infrastructureprovider import LoggingInfrastructureProvider, RandomWaitInfrastructureProvider
 from interlocking.model.helper import Settings
+from interlockinglogicmonitor import MonitorInfrastructureProvider, InterlockingLogicMonitor, Evaluation, CoverageCriteria
 import asyncio
 import logging
 
@@ -27,9 +28,12 @@ async def test_01():
     generator = RouteGenerator(topology)
     generator.generate_routes()
 
-    infrastructure_provider = [LoggingInfrastructureProvider(), RandomWaitInfrastructureProvider(allow_fail=False)]
+    infrastructure_provider = [LoggingInfrastructureProvider(),
+                               #RandomWaitInfrastructureProvider(allow_fail=False),
+                               MonitorInfrastructureProvider(topology)]
 
-    interlocking = Interlocking(infrastructure_provider, Settings(max_number_of_points_at_same_time=3))
+    monitor = InterlockingLogicMonitor(topology)
+    interlocking = Interlocking(infrastructure_provider, Settings(max_number_of_points_at_same_time=3), monitor)
     interlocking.prepare(topology)
     interlocking.print_state()
 
@@ -39,7 +43,7 @@ async def test_01():
             if _route.start_signal.name == _start_signal_name and _route.end_signal.name == _end_signal_name:
                 logging.debug(f"### Set Route {_start_signal_name} -> {_end_signal_name}")
                 _set_route_result = await interlocking.set_route(_route, _train_id)
-                # assert (_set_route_result.success == _should_be_able_to_set)
+                assert (_set_route_result.success == _should_be_able_to_set)
                 interlocking.print_state()
                 return _set_route_result
 
@@ -113,16 +117,24 @@ async def test_01():
                 free_route("60BS2", "60BS3", "RB101")
                 interlocking.print_state()
 
-    await drive_some_route_forwards()
-    await interlocking.reset()
+    #await drive_some_route_forwards()
+    #evaluation = Evaluation(monitor, infrastructure_provider[-1])
+    #logging.info(f"Coverage: {evaluation.get_coverage(CoverageCriteria.ALL)} "
+    #             f"{evaluation.get_coverage(CoverageCriteria.INFRASTRUCTURE_ONLY)} "
+    #             f"{evaluation.get_coverage(CoverageCriteria.ROUTES_ONLY)}")
+    #await interlocking.reset()
 
     await set_route("60ES2", "60AS4", True, "RB101")
-    await set_route("60ES2", "60AS3", False, "RB101")
+    evaluation = Evaluation(monitor, infrastructure_provider[-1])
+    await set_route("60ES2", "60AS3", False, "RB102")
+    evaluation = Evaluation(monitor, infrastructure_provider[-1])
 
     await reset_route("60ES2", "60AS4", "RB101")
-    await set_route("60ES2", "60AS4", True, "RB101")
+    await set_route("60ES2", "60AS4", True, "RB102")
 
     await interlocking.reset()
+    evaluation = Evaluation(monitor, infrastructure_provider[-1])
+    evaluation.print_evaluation()
 
     # Get conflicts:
     for route_uuid_1 in topology.routes:
@@ -135,7 +147,7 @@ async def test_01():
 
             
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     asyncio.run(test_01())
 
 
