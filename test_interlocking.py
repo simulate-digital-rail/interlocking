@@ -117,20 +117,21 @@ async def test_01():
                 free_route("60BS2", "60BS3", "RB101")
                 interlocking.print_state()
 
-    #await drive_some_route_forwards()
-    #evaluation = Evaluation(monitor, infrastructure_provider[-1])
-    #logging.info(f"Coverage: {evaluation.get_coverage(CoverageCriteria.ALL)} "
-    #             f"{evaluation.get_coverage(CoverageCriteria.INFRASTRUCTURE_ONLY)} "
-    #             f"{evaluation.get_coverage(CoverageCriteria.ROUTES_ONLY)}")
-    #await interlocking.reset()
+    await drive_some_route_forwards()
+    evaluation = Evaluation(monitor, infrastructure_provider[-1])
+    logging.info(f"Coverage: {evaluation.get_coverage(CoverageCriteria.ALL)} "
+                 f"{evaluation.get_coverage(CoverageCriteria.INFRASTRUCTURE_ONLY)} "
+                 f"{evaluation.get_coverage(CoverageCriteria.ROUTES_ONLY)}")
+    await interlocking.reset()
 
     await set_route("60ES2", "60AS4", True, "RB101")
     evaluation = Evaluation(monitor, infrastructure_provider[-1])
+    evaluation.print_evaluation()
     await set_route("60ES2", "60AS3", False, "RB102")
     evaluation = Evaluation(monitor, infrastructure_provider[-1])
-
+    evaluation.print_evaluation()
     await reset_route("60ES2", "60AS4", "RB101")
-    await set_route("60ES2", "60AS4", True, "RB102")
+    await set_route("60ES2", "60AS3", True, "RB102")
 
     await interlocking.reset()
     evaluation = Evaluation(monitor, infrastructure_provider[-1])
