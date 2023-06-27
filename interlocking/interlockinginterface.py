@@ -123,16 +123,16 @@ class Interlocking(object):
 
     async def set_route(self, yaramo_route, train_id: str):
         route_formation_time_start = time.time()
+        set_route_result = SetRouteResult()
         if not self.can_route_be_set(yaramo_route, train_id):
-            return False
+            set_route_result.success = False
+            return set_route_result
         route = self.get_route_from_yaramo_route(yaramo_route)
         self.active_routes.append(route)
 
         async with asyncio.TaskGroup() as tg:
             point_task = tg.create_task(self.point_controller.set_route(route, train_id))
             track_task = tg.create_task(self.track_controller.set_route(route, train_id))
-
-        set_route_result = SetRouteResult()
 
         # Only set the signal to go if the points and tracks are processed
         if point_task.result() and track_task.result():
