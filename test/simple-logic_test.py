@@ -7,7 +7,6 @@ import asyncio
 
 
 def test_simple_logic_test():
-    print("Run test")
     topology = helper.get_topology_from_planpro_file("./complex-example.ppxml")
 
     infrastructure_provider = [LoggingInfrastructureProvider()]
@@ -25,6 +24,5 @@ def test_simple_logic_test():
     assert point.state == OccupancyState.RESERVED
 
 
-print("TEst")
 if __name__ == "__main__":
     test_simple_logic_test()
