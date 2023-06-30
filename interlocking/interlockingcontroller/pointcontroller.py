@@ -1,3 +1,6 @@
+from interlocking.model import OccupancyState
+
+
 class PointController(object):
 
     def __init__(self, infrastructure_providers):
@@ -7,22 +10,26 @@ class PointController(object):
     def reset(self):
         for point_id in self.points:
             self.points[point_id].orientation = "undefined"
-            self.set_point_free(self.points[point_id])
+            self.points[point_id].state = OccupancyState.FREE
+            self.points[point_id].used_by = set()
 
-    def set_route(self, route):
+    def set_route(self, route, train_id: str):
         for point_orientations in route.get_necessary_point_orientations():
             point = point_orientations[0]
             orientation = point_orientations[1]
             if orientation == "left" or orientation == "right":
                 self.turn_point(point, orientation)
-                self.set_point_reserved(point)
+                self.set_point_reserved(point, train_id)
             else:
                 raise ValueError("Turn should happen but is not possible")
 
-    def can_route_be_set(self, route):
+    def can_route_be_set(self, route, train_id: str):
         for point in route.get_points_of_route():
-            if point.state != "free":
-                return False
+            if point.state == OccupancyState.FREE:
+                continue
+            if point.is_only_used_by_train(train_id):
+                continue
+            return False
         return True
 
     def do_two_routes_collide(self, route_1, route_2):
@@ -39,20 +46,23 @@ class PointController(object):
         for infrastructure_provider in self.infrastructure_providers:
             infrastructure_provider.turn_point(point.yaramo_node, orientation)
 
-    def set_point_reserved(self, point):
+    def set_point_reserved(self, point, train_id: str):
         print(f"--- Set point {point.point_id} to reserved")
-        point.state = "reserved"
+        point.state = OccupancyState.RESERVED
+        point.used_by.add(train_id)
 
-    def set_point_free(self, point):
-        print(f"--- Set point {point.point_id} to free")
-        point.state = "free"
+    def set_point_free(self, point, train_id: str):
+        if point.state != OccupancyState.FREE:
+            print(f"--- Set point {point.point_id} to free")
+            point.state = OccupancyState.FREE
+            point.used_by.remove(train_id)
 
-    def reset_route(self, route):
+    def reset_route(self, route, train_id: str):
         for point in route.get_points_of_route():
-            self.set_point_free(point)
+            self.set_point_free(point, train_id)
 
     def print_state(self):
         print("State of Points:")
         for point_id in self.points:
             point = self.points[point_id]
-            print(f"{point.point_id}: {point.state} (Orientation: {point.orientation})")
+            print(f"{point.point_id}: {point.state} (Orientation: {point.orientation}) (used by: {point.used_by})")

@@ -52,7 +52,7 @@ class Interlocking(object):
                 if signal.yaramo_signal.edge.uuid == edge.uuid:
                     signals_of_track.append(signal)
                     signal.track = track
-            track.set_signals(signals_of_track)
+            track.prepare_with_signals(signals_of_track)
 
             tracks[track.base_track_id] = track
 
@@ -90,20 +90,20 @@ class Interlocking(object):
             print(active_route.to_string())
         print("##############")
 
-    def set_route(self, yaramo_route):
-        if not self.can_route_be_set(yaramo_route):
+    def set_route(self, yaramo_route, train_id: str):
+        if not self.can_route_be_set(yaramo_route, train_id):
             return False
         route = self.get_route_from_yaramo_route(yaramo_route)
         self.active_routes.append(route)
-        self.point_controller.set_route(route)
-        self.track_controller.set_route(route)
+        self.point_controller.set_route(route, train_id)
+        self.track_controller.set_route(route, train_id)
         self.signal_controller.set_route(route)
         return True
 
-    def can_route_be_set(self, yaramo_route):
+    def can_route_be_set(self, yaramo_route, train_id: str):
         route = self.get_route_from_yaramo_route(yaramo_route)
-        can_be_set = self.track_controller.can_route_be_set(route)
-        can_be_set = can_be_set and self.point_controller.can_route_be_set(route)
+        can_be_set = self.track_controller.can_route_be_set(route, train_id)
+        can_be_set = can_be_set and self.point_controller.can_route_be_set(route, train_id)
         return can_be_set
 
     def do_two_routes_collide(self, yaramo_route_1, yaramo_route_2):
@@ -113,15 +113,15 @@ class Interlocking(object):
         do_collide = do_collide or self.point_controller.do_two_routes_collide(route_1, route_2)
         return do_collide
 
-    def free_route(self, yaramo_route):
+    def free_route(self, yaramo_route, train_id: str):
         route = self.get_route_from_yaramo_route(yaramo_route)
-        self.track_controller.free_route(route)
+        self.track_controller.free_route(route, train_id)
         self.active_routes.remove(route)
 
-    def reset_route(self, yaramo_route):
+    def reset_route(self, yaramo_route, train_id: str):
         route = self.get_route_from_yaramo_route(yaramo_route)
-        self.point_controller.reset_route(route)
-        self.track_controller.reset_route(route)
+        self.point_controller.reset_route(route, train_id)
+        self.track_controller.reset_route(route, train_id)
         self.train_detection_controller.reset_track_segments_of_route(route)
         self.signal_controller.reset_route(route)
         self.active_routes.remove(route)

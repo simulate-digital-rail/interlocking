@@ -38,53 +38,86 @@ def test_01():
     interlocking.prepare(topology)
     interlocking.print_state()
 
-    def set_route(_start_signal_name, _end_signal_name, _should_be_able_to_set):
+    def set_route(_start_signal_name, _end_signal_name, _should_be_able_to_set, _train_id):
         for _route_uuid in topology.routes:
             _route = topology.routes[_route_uuid]
             if _route.start_signal.name == _start_signal_name and _route.end_signal.name == _end_signal_name:
                 print(f"### Set Route {_start_signal_name} -> {_end_signal_name}")
-                _could_be_set = interlocking.set_route(_route)
+                _could_be_set = interlocking.set_route(_route, _train_id)
                 assert (_could_be_set == _should_be_able_to_set)
-                interlocking.print_state()
+                #interlocking.print_state()
 
-    def free_route(_start_signal_name, _end_signal_name):
+    def free_route(_start_signal_name, _end_signal_name, _train_id):
         for _route_uuid in topology.routes:
             _route = topology.routes[_route_uuid]
             if _route.start_signal.name == _start_signal_name and _route.end_signal.name == _end_signal_name:
                 print(f"### Free Route {_start_signal_name} -> {_end_signal_name}")
-                interlocking.free_route(_route)
-                interlocking.print_state()
+                interlocking.free_route(_route, _train_id)
+                #interlocking.print_state()
 
-    def reset_route(_start_signal_name, _end_signal_name):
+    def reset_route(_start_signal_name, _end_signal_name, _train_id):
         for _route_uuid in topology.routes:
             _route = topology.routes[_route_uuid]
             if _route.start_signal.name == _start_signal_name and _route.end_signal.name == _end_signal_name:
                 print(f"### Reset Route {_start_signal_name} -> {_end_signal_name}")
-                interlocking.reset_route(_route)
-                interlocking.print_state()
+                interlocking.reset_route(_route, _train_id)
+                # interlocking.print_state()
 
-    set_route("60BS1", "60BS2", True)
+    def drive_some_route_backwards():
+        set_route("60BS6", "60BS7", True, "RB101")
+        interlocking.print_state()
+        # "Drive" some train
+        print("Driving!")
+        infrastructure_provider.tds_count_in("b8e69-1", "RB101")
+        infrastructure_provider.tds_count_in("b8e69-0", "RB101")
+        infrastructure_provider.tds_count_out("b8e69-1", "RB101")
+        infrastructure_provider.tds_count_in("94742-0", "RB101")
+        infrastructure_provider.tds_count_out("b8e69-0", "RB101")
+        infrastructure_provider.tds_count_in("de139-2", "RB101")
+        infrastructure_provider.tds_count_out("94742-0", "RB101")
+        infrastructure_provider.tds_count_out("de139-2", "RB101")
+        free_route("60BS6", "60BS7", "RB101")
+        interlocking.print_state()
 
-    # "Drive" some train
-    print("Driving!")
-    tds = interlocking.train_detection_controller
-    infrastructure_provider.tds_count_in("de139-1")
-    infrastructure_provider.tds_count_in("de139-2")
-    infrastructure_provider.tds_count_out("de139-1")
-    infrastructure_provider.tds_count_in("94742-0")
-    infrastructure_provider.tds_count_out("de139-2")
-    interlocking.print_state()
-    infrastructure_provider.tds_count_in("b8e69-0")
-    infrastructure_provider.tds_count_out("94742-0")
-    infrastructure_provider.tds_count_out("b8e69-0")
-    interlocking.print_state()
-    free_route("60BS1", "60BS2")
+    def drive_some_route_forwards():
+        set_route("60BS1", "60BS2", True, "RB101")
+        interlocking.print_state()
+        set_route("60BS2", "60BS3", True, "RB101")
+        interlocking.print_state()
+        #set_route("60AS1", "60BS3", True, "RB101")
+        #interlocking.print_state()
 
-    set_route("60ES2", "60AS4", True)
-    set_route("60ES2", "60AS3", False)
+        # "Drive" some train
+        print("Driving!")
+        infrastructure_provider.tds_count_in("de139-1", "RB101")
+        infrastructure_provider.tds_count_in("de139-2", "RB101")
+        infrastructure_provider.tds_count_out("de139-1", "RB101")
+        infrastructure_provider.tds_count_in("94742-0", "RB101")
+        infrastructure_provider.tds_count_out("de139-2", "RB101")
+        infrastructure_provider.tds_count_in("b8e69-0", "RB101")
+        infrastructure_provider.tds_count_out("94742-0", "RB101")
+        infrastructure_provider.tds_count_in("b8e69-1", "RB101")
+        infrastructure_provider.tds_count_out("b8e69-0", "RB101")
+        free_route("60BS1", "60BS2", "RB101")
+        interlocking.print_state()
+        infrastructure_provider.tds_count_in("b8e69-2", "RB101")
+        infrastructure_provider.tds_count_out("b8e69-1", "RB101")
+        infrastructure_provider.tds_count_in("b8e69-3", "RB101")
+        infrastructure_provider.tds_count_out("b8e69-2", "RB101")
+        infrastructure_provider.tds_count_in("a8f44-0", "RB101")
+        infrastructure_provider.tds_count_out("b8e69-3", "RB101")
+        infrastructure_provider.tds_count_out("a8f44-0", "RB101")
+        interlocking.print_state()
+        free_route("60BS2", "60BS3", "RB101")
+        interlocking.print_state()
 
-    reset_route("60ES2", "60AS4")
-    set_route("60ES2", "60AS4", True)
+    drive_some_route_forwards()
+    return
+    set_route("60ES2", "60AS4", True, "RB101")
+    set_route("60ES2", "60AS3", False, "RB101")
+
+    reset_route("60ES2", "60AS4", "RB101")
+    set_route("60ES2", "60AS4", True, "RB101")
 
     interlocking.reset()
 
