@@ -8,8 +8,8 @@ class LoggingInfrastructureProvider(InfrastructureProvider):
     def __init__(self):
         super().__init__()
 
-    async def set_signal_state(self, yaramo_signal, target_state):
-        logging.info(f"{time.strftime('%X')} Set signal {yaramo_signal.name} to {target_state}")
+    async def set_signal_aspect(self, yaramo_signal, target_aspect):
+        logging.info(f"{time.strftime('%X')} Set signal {yaramo_signal.name} to {target_aspect}")
         return True
 
     async def turn_point(self, yaramo_point, target_orientation: str):

@@ -22,7 +22,7 @@ class InfrastructureProvider(ABC):
     #
 
     @abstractmethod
-    async def set_signal_state(self, yaramo_signal, target_state):
+    async def set_signal_aspect(self, yaramo_signal, target_aspect):
         """This method will be called when the interlocking controller wants to change the signal-state of a specific signal. 
         `yaramo_signal` corresponds to the identifier of the signal in the yaramo model; `target_state` is one of `"halt"` and `"go"`.
         """

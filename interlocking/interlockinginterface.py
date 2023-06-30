@@ -131,7 +131,7 @@ class Interlocking(object):
 
         # Only set the signal to go if the points and tracks are processed
         if point_task.result() and track_task.result():
-            set_route_result.success = await self.signal_controller.set_route(route)
+            set_route_result.success = await self.signal_controller.set_route(route, train_id)
             if not set_route_result.success:
                 await self.reset_route(yaramo_route, train_id)
         else:
@@ -157,6 +157,7 @@ class Interlocking(object):
     def free_route(self, yaramo_route, train_id: str):
         route = self.get_route_from_yaramo_route(yaramo_route)
         self.track_controller.free_route(route, train_id)
+        self.signal_controller.free_route(route, train_id)
         self.active_routes.remove(route)
 
     async def reset_route(self, yaramo_route, train_id: str):
@@ -164,7 +165,7 @@ class Interlocking(object):
         self.point_controller.reset_route(route, train_id)
         self.track_controller.reset_route(route, train_id)
         self.train_detection_controller.reset_track_segments_of_route(route)
-        await self.signal_controller.reset_route(route)
+        await self.signal_controller.reset_route(route, train_id)
         self.active_routes.remove(route)
 
     def get_route_from_yaramo_route(self, yaramo_route):

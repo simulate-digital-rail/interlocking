@@ -31,6 +31,13 @@ def get_route_by_signal_names(topology: Topology, start_signal_name: str, end_si
             return route
 
 
+def get_interlocking_signal_by_name(interlocking: Interlocking, signal_name: str):
+    for signal_uuid in interlocking.signal_controller.signals:
+        signal = interlocking.signal_controller.signals[signal_uuid]
+        if signal.yaramo_signal.name == signal_name:
+            return signal
+
+
 async def set_route(interlocking: Interlocking, route: Route, should_be_able_to_set: bool, train_id: str):
     set_route_result = await interlocking.set_route(route, train_id)
     assert (set_route_result.success == should_be_able_to_set)

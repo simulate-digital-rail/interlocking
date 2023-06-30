@@ -8,10 +8,10 @@ class SUMOInfrastructureProvider(InfrastructureProvider):
         super().__init__()
         self.traci_instance = traci_instance
 
-    async def set_signal_state(self, yaramo_signal, target_state):
-        if target_state == "go":
+    async def set_signal_aspect(self, yaramo_signal, target_aspect):
+        if target_aspect == "go":
             self.traci_instance.trafficlight.setRedYellowGreenState(yaramo_signal.name, "GG")
-        elif target_state == "halt":
+        elif target_aspect == "halt":
             if yaramo_signal.direction == SignalDirection.IN:
                 self.traci_instance.trafficlight.setRedYellowGreenState(yaramo_signal.name, "rG")
             else:
