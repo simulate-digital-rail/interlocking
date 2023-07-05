@@ -14,8 +14,8 @@ class Interlocking(object):
         self.infrastructure_providers = infrastructure_providers
         self.settings = settings
 
-        self.point_controller = PointController(self.infrastructure_providers, self.settings)
         self.signal_controller = SignalController(self.infrastructure_providers)
+        self.point_controller = PointController(self.signal_controller, self.infrastructure_providers, self.settings)
         self.track_controller = TrackController(self, self.point_controller, self.signal_controller)
         self.train_detection_controller = TrainDetectionController(self.track_controller, self.infrastructure_providers)
         self.routes = []

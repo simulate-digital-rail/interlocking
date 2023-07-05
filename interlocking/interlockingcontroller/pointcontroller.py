@@ -1,14 +1,20 @@
 from interlocking.model import OccupancyState
+from interlocking.model.helper import Settings
+from interlocking.infrastructureprovider import InfrastructureProvider
+from .flankprotectioncontroller import FlankProtectionController
+from .signalcontroller import SignalController
 import asyncio
 import logging
 
 
 class PointController(object):
 
-    def __init__(self, infrastructure_providers, settings):
+    def __init__(self, signal_controller: SignalController, infrastructure_providers: list[InfrastructureProvider],
+                 settings: Settings):
         self.points = None
         self.infrastructure_providers = infrastructure_providers
         self.settings = settings
+        self.flank_protection_controller = FlankProtectionController(self, signal_controller)
 
     def reset(self):
         for point_id in self.points:
@@ -27,6 +33,7 @@ class PointController(object):
                     if orientation == "left" or orientation == "right":
                         self.set_point_reserved(point, train_id)
                         tasks.append(tg.create_task(self.turn_point(point, orientation)))
+                        tasks.append(tg.create_task(self.flank_protection_controller.add_flank_protection_for_point(point, orientation, route, train_id)))
                     else:
                         raise ValueError("Turn should happen but is not possible")
 

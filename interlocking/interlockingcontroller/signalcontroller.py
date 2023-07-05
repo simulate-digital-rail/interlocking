@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from interlocking.model import OccupancyState
+from interlocking.model import OccupancyState, Signal
 
 
 class SignalController(object):
@@ -52,14 +52,16 @@ class SignalController(object):
     def free_route(self, route, train_id: str):
         if route.start_signal.signal_aspect == "go":
             raise ValueError("Try to free route with start signal aspect is go")
-        route.start_signal.state = OccupancyState.FREE
-        route.start_signal.used_by.remove(train_id)
+        self.free_signal(route.start_signal, train_id)
 
     async def reset_route(self, route, train_id: str):
         result = await self.set_signal_halt(route.start_signal)
         if result:
-            route.start_signal.state = OccupancyState.FREE
-            route.start_signal.used_by.remove(train_id)
+            self.free_signal(route.start_signal, train_id)
+
+    def free_signal(self, signal: Signal, train_id: str):
+        signal.state = OccupancyState.FREE
+        signal.used_by.remove(train_id)
 
     def print_state(self):
         logging.debug("State of Signals:")

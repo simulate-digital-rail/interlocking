@@ -1,5 +1,6 @@
 from yaramo.model import NodeConnectionDirection
 from .occupancystate import OccupancyState
+from .track import Track
 
 
 class Point(object):
@@ -74,6 +75,15 @@ class Point(object):
                 return "left"
             return "right"
         raise ValueError("None of the given edges is the head edge, orientation not possible")
+
+    def get_connection_direction_of_track(self, track: Track) -> NodeConnectionDirection:
+        if self.head.base_track_id == track.base_track_id:
+            return NodeConnectionDirection.Spitze
+        if self.left.base_track_id == track.base_track_id:
+            return NodeConnectionDirection.Links
+        if self.right.base_track_id == track.base_track_id:
+            return NodeConnectionDirection.Rechts
+        raise ValueError("Given track is not connected to node")
 
     def get_possible_successors(self, track):
         if not self.is_point:

@@ -43,6 +43,7 @@ def test_example_1():
     interlocking.prepare(topology)
     route = helper.get_route_by_signal_names(topology, "99N1", "99N2")
     asyncio.run(helper.set_route(interlocking, route, True, "RB101"))
+    interlocking.print_state()
 
     # Test point is in correct position
     point_id = "fe8ed"  # point on the route between 99N1 and 99N2
@@ -67,6 +68,7 @@ def test_example_2():
     interlocking.prepare(topology)
     route = helper.get_route_by_signal_names(topology, "60E1", "60A1")
     asyncio.run(helper.set_route(interlocking, route, True, "RB101"))
+    interlocking.print_state()
 
     # Test point is in correct position
     point_id = "7a7f9"  # point on the route between 60BS2 and 60BS3
