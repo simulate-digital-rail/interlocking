@@ -65,12 +65,11 @@ class FlankProtectionController(object):
             opposite_direction = SignalDirection.IN
             if direction == SignalDirection.IN:
                 opposite_direction = SignalDirection.GEGEN
-
             yaramo_signals_in_direction = yaramo_edge.get_signals_with_direction_in_order(opposite_direction)
             # If there is any signal, take the closest one to the point and use it as halt-showing signal.
             found_signal = False
             if len(yaramo_signals_in_direction) > 0:
-                yaramo_signal = yaramo_signals_in_direction[0]
+                yaramo_signal = yaramo_signals_in_direction[-1]  # Take the last one, which is the closest one.
                 for signal_uuid in self.signal_controller.signals:
                     if signal_uuid == yaramo_signal.uuid:
                         signal_results.append(self.signal_controller.signals[signal_uuid])

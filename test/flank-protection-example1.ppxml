@@ -376,7 +376,7 @@
                     <Wert>ced139a6-abc3-41c2-be06-bbc09075296d</Wert>
                   </ID_Stellelement>
                   <Signal_Funktion>
-                    <Wert>Einfahr_Signal</Wert>
+                    <Wert>Block_Signal</Wert>
                   </Signal_Funktion>
                 </Signal_Real_Aktiv>
                 <Signal_Real_Aktiv_Schirm>
@@ -462,7 +462,7 @@
                     <Wert>dcd95b3d-6342-4bfa-b55a-a3015a553dea</Wert>
                   </ID_Stellelement>
                   <Signal_Funktion>
-                    <Wert>Ausfahr_Signal</Wert>
+                    <Wert>Block_Signal</Wert>
                   </Signal_Funktion>
                 </Signal_Real_Aktiv>
                 <Signal_Real_Aktiv_Schirm>
@@ -548,7 +548,93 @@
                     <Wert>ae6081db-b87d-4139-b637-81ea4e001163</Wert>
                   </ID_Stellelement>
                   <Signal_Funktion>
-                    <Wert>Einfahr_Signal</Wert>
+                    <Wert>Block_Signal</Wert>
+                  </Signal_Funktion>
+                </Signal_Real_Aktiv>
+                <Signal_Real_Aktiv_Schirm>
+                  <Dunkelschaltung>
+                    <Wert>false</Wert>
+                  </Dunkelschaltung>
+                  <Richtpunktentfernung>
+                    <Wert>150</Wert>
+                  </Richtpunktentfernung>
+                  <Signal_Art>
+                    <Wert>Hauptsignal</Wert>
+                  </Signal_Art>
+                  <Signalsystem>
+                    <Wert>Ks</Wert>
+                  </Signalsystem>
+                  <Streuscheibe_Art>
+                    <Wert>HG</Wert>
+                  </Streuscheibe_Art>
+                  <Streuscheibe_Betriebsstellung>
+                    <Wert>HG4</Wert>
+                  </Streuscheibe_Betriebsstellung>
+                </Signal_Real_Aktiv_Schirm>
+              </Signal_Real>
+            </Signal>
+            <Signal>
+              <Identitaet>
+                <Wert>df333e0b-a904-48d4-93a0-9a759cc55c26</Wert>
+              </Identitaet>
+              <Basis_Objekt_Allg>
+                <Datum_Regelwerk>
+                  <Wert>2012-02-24</Wert>
+                </Datum_Regelwerk>
+              </Basis_Objekt_Allg>
+              <Objektreferenzen/>
+              <Punkt_Objekt_Strecke>
+                <ID_Strecke>
+                  <Wert>7248c0cb-14e9-4697-b17f-db443be5e9ef</Wert>
+                </ID_Strecke>
+                <Strecke_Km>
+                  <Wert>60,616</Wert>
+                </Strecke_Km>
+              </Punkt_Objekt_Strecke>
+              <Punkt_Objekt_TOP_Kante>
+                <Abstand>
+                  <Wert>1.000</Wert>
+                </Abstand>
+                <ID_TOP_Kante>
+                  <Wert>2cb5c9a7-a910-4c20-855a-ece3ac2c8f45</Wert>
+                </ID_TOP_Kante>
+                <Wirkrichtung>
+                  <Wert>in</Wert>
+                </Wirkrichtung>
+                <Seitlicher_Abstand>
+                  <Wert>3.950</Wert>
+                </Seitlicher_Abstand>
+              </Punkt_Objekt_TOP_Kante>
+              <Bezeichnung>
+                <Bezeichnung_Aussenanlage>
+                  <Wert>99N4</Wert>
+                </Bezeichnung_Aussenanlage>
+                <Bezeichnung_Lageplan_Kurz>
+                  <Wert>99N4</Wert>
+                </Bezeichnung_Lageplan_Kurz>
+                <Bezeichnung_Lageplan_Lang>
+                  <Wert>99N4</Wert>
+                </Bezeichnung_Lageplan_Lang>
+                <Bezeichnung_Tabelle>
+                  <Wert>99N4</Wert>
+                </Bezeichnung_Tabelle>
+                <Kennzahl>
+                  <Wert>99</Wert>
+                </Kennzahl>
+                <Oertlicher_Elementname>
+                  <Wert>N4</Wert>
+                </Oertlicher_Elementname>
+              </Bezeichnung>
+              <Signal_Real>
+                <Signal_Befestigungsart>
+                  <Wert>Mast</Wert>
+                </Signal_Befestigungsart>
+                <Signal_Real_Aktiv>
+                  <ID_Stellelement>
+                    <Wert>df333e0b-a904-48d4-93a0-9a759cc55c26</Wert>
+                  </ID_Stellelement>
+                  <Signal_Funktion>
+                    <Wert>Block_Signal</Wert>
                   </Signal_Funktion>
                 </Signal_Real_Aktiv>
                 <Signal_Real_Aktiv_Schirm>
@@ -610,6 +696,23 @@
             <Stellelement>
               <Identitaet>
                 <Wert>ae6081db-b87d-4139-b637-81ea4e001163</Wert>
+              </Identitaet>
+              <Basis_Objekt_Allg>
+                <Datum_Regelwerk>
+                  <Wert>2012-02-24</Wert>
+                </Datum_Regelwerk>
+              </Basis_Objekt_Allg>
+              <Objektreferenzen/>
+              <ID_Energie>
+                <Wert>C35FDB88-889E-539E-A68B-6079265F70D9</Wert>
+              </ID_Energie>
+              <ID_Information>
+                <Wert>C35FDB88-889E-539E-A68B-6079265F70D9</Wert>
+              </ID_Information>
+            </Stellelement>
+            <Stellelement>
+              <Identitaet>
+                <Wert>df333e0b-a904-48d4-93a0-9a759cc55c26</Wert>
               </Identitaet>
               <Basis_Objekt_Allg>
                 <Datum_Regelwerk>
@@ -921,6 +1024,9 @@
                         </ID_LST_Objekt_Planungsbereich>
                          <ID_LST_Objekt_Planungsbereich>
                             <Wert>ae6081db-b87d-4139-b637-81ea4e001163</Wert>
+                        </ID_LST_Objekt_Planungsbereich>
+                         <ID_LST_Objekt_Planungsbereich>
+                            <Wert>df333e0b-a904-48d4-93a0-9a759cc55c26</Wert>
                         </ID_LST_Objekt_Planungsbereich>
                          <ID_LST_Objekt_Planungsbereich>
                             <Wert>7248c0cb-14e9-4697-b17f-db443be5e9ef</Wert>
