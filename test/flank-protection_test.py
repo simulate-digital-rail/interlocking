@@ -1,9 +1,11 @@
 # Example 1: Halt zeigendes Signal
 # Example 2: Schutzweiche
 # Example 3: Schutztransportweiche mit Schutzweise und halt zeigendem Signal
+# Example 4: Two routes, that do not conflict, but each point is also flank protection of the other route
 
 from .helper import get_topology_from_planpro_file, get_route_by_signal_names, set_route, \
     get_interlocking_signal_by_name
+#import helper
 from interlocking.interlockinginterface import Interlocking
 from interlocking.infrastructureprovider import LoggingInfrastructureProvider, InfrastructureProvider
 from interlocking.model import OccupancyState
@@ -119,9 +121,24 @@ def test_example_3():
     assert "RB101" in flank_protection_signal.used_by
 
 
+def test_example_4():
+    topology = get_topology_from_planpro_file("./flank-protection-example4.ppxml")
+    track_operations_ip = TrackOperationsInfrastructureProvider()
+    infrastructure_provider = [LoggingInfrastructureProvider(), track_operations_ip]
+
+    interlocking = Interlocking(infrastructure_provider, Settings(max_number_of_points_at_same_time=3))
+    interlocking.prepare(topology)
+    route = get_route_by_signal_names(topology, "60S1", "60S2")
+    asyncio.run(set_route(interlocking, route, True, "RB101"))
+    interlocking.print_state()
+    route = get_route_by_signal_names(topology, "60S4", "60S3")
+    asyncio.run(set_route(interlocking, route, True, "RB102"))
+    interlocking.print_state()
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     test_example_1()
     test_example_2()
     test_example_3()
+    test_example_4()
 
