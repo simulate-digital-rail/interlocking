@@ -1,7 +1,6 @@
 from planpro_importer.reader import PlanProReader
 from railwayroutegenerator.routegenerator import RouteGenerator
-from interlocking.interlockinginterface import Interlocking
-from yaramo.model import Topology, Route
+from yaramo.model import Topology
 
 
 def get_topology_from_planpro_file(file_name: str):
@@ -29,9 +28,3 @@ def get_route_by_signal_names(topology: Topology, start_signal_name: str, end_si
         route = topology.routes[route_uuid]
         if route.start_signal.name == start_signal_name and route.end_signal.name == end_signal_name:
             return route
-
-
-async def set_route(interlocking: Interlocking, route: Route, should_be_able_to_set: bool, train_id: str):
-    set_route_result = await interlocking.set_route(route, train_id)
-    assert (set_route_result.success == should_be_able_to_set)
-    return set_route_result
