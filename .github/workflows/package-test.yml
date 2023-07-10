@@ -45,4 +45,4 @@ jobs:
     - name: Test with pytest
       run: |
         cd test
-        poetry run pytest .
+        pytest .
