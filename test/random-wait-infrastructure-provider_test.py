@@ -1,10 +1,10 @@
-import helper
+from .helper import topologyhelper, interlockinghelper
 from interlocking.infrastructureprovider import RandomWaitInfrastructureProvider
 import asyncio
 
 
 def test_fail_probability():
-    topology = helper.get_topology_from_planpro_file("./complex-example.ppxml")
+    topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
     signal_tr = range(0, 1)
     point_tr = range(0, 1)
 
@@ -59,7 +59,7 @@ def test_fail_probability():
 
 
 def test_always_succeed_and_fail():
-    topology = helper.get_topology_from_planpro_file("./complex-example.ppxml")
+    topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
     signal_tr = range(0, 1)
     point_tr = range(0, 1)
 
