@@ -1,5 +1,5 @@
 from .overlapcontroller import OverlapController
-from interlocking.model import OccupancyState
+from interlocking.model import OccupancyState, Route
 from yaramo.model import SignalDirection
 import logging
 
@@ -33,7 +33,7 @@ class TrackController(object):
             return False
         return self.overlap_controller.can_any_overlap_be_reserved(route, train_id)
 
-    def do_two_routes_collide(self, route_1, route_2):
+    def do_two_routes_collide(self, route_1: Route, route_2: Route):
         segments_of_route_1 = set(map(lambda seg: seg.segment_id, route_1.get_segments_of_route()))
         segments_of_route_2 = set(map(lambda seg: seg.segment_id, route_2.get_segments_of_route()))
         if len(segments_of_route_1.intersection(segments_of_route_2)) > 0:

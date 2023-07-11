@@ -81,7 +81,9 @@ class Route(object):
             # Start signal and end signal are on the same track
             pos_start_signal = self.start_signal.track.get_position_of_signal(self.start_signal)
             pos_end_signal = self.end_signal.track.get_position_of_signal(self.end_signal)
-            return self.start_signal.track.segments[pos_start_signal + 1:pos_end_signal + 1]
+            min_pos = min(pos_start_signal, pos_end_signal)
+            max_pos = max(pos_start_signal, pos_end_signal)
+            return self.start_signal.track.segments[min_pos + 1:max_pos + 1]
 
         result = self.start_signal.track.get_segments_from_signal(self.start_signal)
         for track in self.tracks[1:-1]:

@@ -1,11 +1,12 @@
 import asyncio
 import logging
+from interlocking.model import Signal
 
 
 class SignalController(object):
 
     def __init__(self, infrastructure_providers):
-        self.signals = None
+        self.signals: dict[str, Signal] = {}
         self.infrastructure_providers = infrastructure_providers
 
     async def reset(self):

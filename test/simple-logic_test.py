@@ -14,5 +14,5 @@ def test_simple_logic_test():
     helper.test_point(interlocking, "e641b", "RB101", "right", OccupancyState.RESERVED)
 
 
-if __name__ == "__main__":
-    test_simple_logic_test()
+# if __name__ == "__main__":
+    # test_simple_logic_test()
