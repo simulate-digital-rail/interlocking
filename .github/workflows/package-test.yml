@@ -45,4 +45,5 @@ jobs:
     - name: Test with pytest
       run: |
         cd test
-        poetry run pytest .
+        poetry run coverage run -m pytest .
+        poetry run coverage report --omit="/usr/*,*__init__*,*model.py,*reader.py" -m --skip-covered --sort=cover --fail-under=85

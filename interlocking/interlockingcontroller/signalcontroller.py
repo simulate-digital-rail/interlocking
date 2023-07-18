@@ -6,7 +6,7 @@ from interlocking.model import OccupancyState, Signal
 class SignalController(object):
 
     def __init__(self, infrastructure_providers):
-        self.signals = None
+        self.signals: dict[str, Signal] = {}
         self.infrastructure_providers = infrastructure_providers
 
     async def reset(self):
@@ -57,7 +57,9 @@ class SignalController(object):
     async def reset_route(self, route, train_id: str):
         result = await self.set_signal_halt(route.start_signal)
         if result:
-            self.free_signal(route.start_signal, train_id)
+            route.start_signal.state = OccupancyState.FREE
+            if train_id in route.start_signal.used_by:
+                route.start_signal.used_by.remove(train_id)
 
     def free_signal(self, signal: Signal, train_id: str):
         signal.state = OccupancyState.FREE

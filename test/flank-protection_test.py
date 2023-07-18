@@ -3,9 +3,7 @@
 # Example 3: Schutztransportweiche mit Schutzweise und halt zeigendem Signal
 # Example 4: Two routes, that do not conflict, but each point is also flank protection of the other route
 
-from .helper import get_topology_from_planpro_file, get_route_by_signal_names, set_route, \
-    get_interlocking_signal_by_name
-#import helper
+from .helper import topologyhelper, interlockinghelper
 from interlocking.interlockinginterface import Interlocking
 from interlocking.infrastructureprovider import LoggingInfrastructureProvider, InfrastructureProvider
 from interlocking.model import OccupancyState
@@ -36,14 +34,14 @@ class TrackOperationsInfrastructureProvider(InfrastructureProvider):
 
 
 def test_example_1():
-    topology = get_topology_from_planpro_file("./flank-protection-example1.ppxml")
+    topology = topologyhelper.get_topology_from_planpro_file("./flank-protection-example1.ppxml")
     track_operations_ip = TrackOperationsInfrastructureProvider()
     infrastructure_provider = [LoggingInfrastructureProvider(), track_operations_ip]
 
     interlocking = Interlocking(infrastructure_provider, Settings(max_number_of_points_at_same_time=3))
     interlocking.prepare(topology)
-    route = get_route_by_signal_names(topology, "99N1", "99N2")
-    asyncio.run(set_route(interlocking, route, True, "RB101"))
+    route = topologyhelper.get_route_by_signal_names(topology, "99N1", "99N2")
+    asyncio.run(interlockinghelper.set_route(interlocking, route, True, "RB101"))
     interlocking.print_state()
 
     # Test point is in correct position
@@ -53,7 +51,7 @@ def test_example_1():
     assert point.orientation == "left"
     assert point.state == OccupancyState.RESERVED
 
-    flank_protection_signal = get_interlocking_signal_by_name(interlocking, "99N3")
+    flank_protection_signal = topologyhelper.get_interlocking_signal_by_name(interlocking, "99N3")
     assert flank_protection_signal.signal_aspect == "halt"
     assert track_operations_ip.was_signal_set_to_aspect(flank_protection_signal.yaramo_signal, "halt")
     assert flank_protection_signal.state == OccupancyState.FLANK_PROTECTION
@@ -61,14 +59,14 @@ def test_example_1():
 
 
 def test_example_2():
-    topology = get_topology_from_planpro_file("./flank-protection-example2.ppxml")
+    topology = topologyhelper.get_topology_from_planpro_file("./flank-protection-example2.ppxml")
     track_operations_ip = TrackOperationsInfrastructureProvider()
     infrastructure_provider = [LoggingInfrastructureProvider(), track_operations_ip]
 
     interlocking = Interlocking(infrastructure_provider, Settings(max_number_of_points_at_same_time=3))
     interlocking.prepare(topology)
-    route = get_route_by_signal_names(topology, "60E1", "60A1")
-    asyncio.run(set_route(interlocking, route, True, "RB101"))
+    route = topologyhelper.get_route_by_signal_names(topology, "60E1", "60A1")
+    asyncio.run(interlockinghelper.set_route(interlocking, route, True, "RB101"))
     interlocking.print_state()
 
     # Test point is in correct position
@@ -86,14 +84,14 @@ def test_example_2():
 
 
 def test_example_3():
-    topology = get_topology_from_planpro_file("./flank-protection-example3.ppxml")
+    topology = topologyhelper.get_topology_from_planpro_file("./flank-protection-example3.ppxml")
     track_operations_ip = TrackOperationsInfrastructureProvider()
     infrastructure_provider = [LoggingInfrastructureProvider(), track_operations_ip]
 
     interlocking = Interlocking(infrastructure_provider, Settings(max_number_of_points_at_same_time=3))
     interlocking.prepare(topology)
-    route = get_route_by_signal_names(topology, "60E1", "60A1")
-    asyncio.run(set_route(interlocking, route, True, "RB101"))
+    route = topologyhelper.get_route_by_signal_names(topology, "60E1", "60A1")
+    asyncio.run(interlockinghelper.set_route(interlocking, route, True, "RB101"))
     interlocking.print_state()
 
     # Test point is in correct position
@@ -114,7 +112,7 @@ def test_example_3():
     assert flank_protection_point.state == OccupancyState.FLANK_PROTECTION
     assert "RB101" in flank_protection_point.used_by
 
-    flank_protection_signal = get_interlocking_signal_by_name(interlocking, "60E2")
+    flank_protection_signal = topologyhelper.get_interlocking_signal_by_name(interlocking, "60E2")
     assert flank_protection_signal.signal_aspect == "halt"
     assert track_operations_ip.was_signal_set_to_aspect(flank_protection_signal.yaramo_signal, "halt")
     assert flank_protection_signal.state == OccupancyState.FLANK_PROTECTION
@@ -122,17 +120,17 @@ def test_example_3():
 
 
 def test_example_4():
-    topology = get_topology_from_planpro_file("./flank-protection-example4.ppxml")
+    topology = topologyhelper.get_topology_from_planpro_file("./flank-protection-example4.ppxml")
     track_operations_ip = TrackOperationsInfrastructureProvider()
     infrastructure_provider = [LoggingInfrastructureProvider(), track_operations_ip]
 
     interlocking = Interlocking(infrastructure_provider, Settings(max_number_of_points_at_same_time=3))
     interlocking.prepare(topology)
-    route = get_route_by_signal_names(topology, "60S1", "60S2")
-    asyncio.run(set_route(interlocking, route, True, "RB101"))
+    route = topologyhelper.get_route_by_signal_names(topology, "60S1", "60S2")
+    asyncio.run(interlockinghelper.set_route(interlocking, route, True, "RB101"))
     interlocking.print_state()
-    route = get_route_by_signal_names(topology, "60S4", "60S3")
-    asyncio.run(set_route(interlocking, route, True, "RB102"))
+    route = topologyhelper.get_route_by_signal_names(topology, "60S4", "60S3")
+    asyncio.run(interlockinghelper.set_route(interlocking, route, True, "RB102"))
     interlocking.print_state()
 
 if __name__ == "__main__":

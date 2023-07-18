@@ -20,6 +20,7 @@ planpro-importer = {git = "https://github.com/simulate-digital-rail/planpro-impo
 pylint = "^2.15.10"
 black = "^22.12.0"
 pre-commit = "^3.0.0"
+coverage = "^7.2.7"
 
 [build-system]
 requires = ["poetry-core"]
