@@ -1,15 +1,20 @@
 from interlocking.interlockingcontroller import PointController, SignalController, TrackController, TrainDetectionController
 from interlocking.model import Point, Track, Signal, Route
+from interlocking.model.helper import SetRouteResult, Settings, InterlockingOperationType
+import asyncio
+import time
+import logging
 
 
 class Interlocking(object):
 
-    def __init__(self, infrastructure_providers):
+    def __init__(self, infrastructure_providers, settings=Settings()):
         if not isinstance(infrastructure_providers, list):
             infrastructure_providers = [infrastructure_providers]
         self.infrastructure_providers = infrastructure_providers
+        self.settings = settings
 
-        self.point_controller = PointController(self.infrastructure_providers)
+        self.point_controller = PointController(self.infrastructure_providers, self.settings)
         self.signal_controller = SignalController(self.infrastructure_providers)
         self.track_controller = TrackController(self, self.point_controller, self.signal_controller)
         self.train_detection_controller = TrainDetectionController(self.track_controller, self.infrastructure_providers)
@@ -73,32 +78,68 @@ class Interlocking(object):
 
             self.routes.append(route)
 
-    def reset(self):
+    async def run_with_operations_queue(self, operations_queue):
+        next_op = await operations_queue.get()
+        while next_op.operation_type != InterlockingOperationType.EXIT:
+            op_type = next_op.operation_type
+            if op_type == InterlockingOperationType.RESET:
+                await self.reset()
+            if op_type == InterlockingOperationType.PRINT_STATE:
+                self.print_state()
+            if op_type == InterlockingOperationType.SET_ROUTE:
+                await self.set_route(next_op.yaramo_route, next_op.train_id)
+            if op_type == InterlockingOperationType.FREE_ROUTE:
+                self.free_route(next_op.yaramo_route, next_op.train_id)
+            if op_type == InterlockingOperationType.RESET_ROUTE:
+                await self.reset_route(next_op.yaramo_route, next_op.train_id)
+            if op_type == InterlockingOperationType.TDS_COUNT_IN:
+                await next_op.infrastructure_provider.tds_count_in(next_op.segment_id, next_op.train_id)
+            if op_type == InterlockingOperationType.TDS_COUNT_OUT:
+                await next_op.infrastructure_provider.tds_count_out(next_op.segment_id, next_op.train_id)
+            operations_queue.task_done()
+            next_op = await operations_queue.get()
+
+    async def reset(self):
         self.point_controller.reset()
         self.track_controller.reset()
-        self.signal_controller.reset()
+        await self.signal_controller.reset()
         self.active_routes = []
 
     def print_state(self):
-        print("##############")
+        logging.debug("##############")
         self.point_controller.print_state()
         self.track_controller.print_state()
         self.signal_controller.print_state()
 
-        print("Active Routes:")
+        logging.debug("Active Routes:")
         for active_route in self.active_routes:
-            print(active_route.to_string())
-        print("##############")
+            logging.debug(active_route.to_string())
+        logging.debug("##############")
 
-    def set_route(self, yaramo_route, train_id: str):
+    async def set_route(self, yaramo_route, train_id: str):
+        route_formation_time_start = time.time()
+        set_route_result = SetRouteResult()
         if not self.can_route_be_set(yaramo_route, train_id):
-            return False
+            set_route_result.success = False
+            return set_route_result
         route = self.get_route_from_yaramo_route(yaramo_route)
         self.active_routes.append(route)
-        self.point_controller.set_route(route, train_id)
-        self.track_controller.set_route(route, train_id)
-        self.signal_controller.set_route(route)
-        return True
+
+        async with asyncio.TaskGroup() as tg:
+            point_task = tg.create_task(self.point_controller.set_route(route, train_id))
+            track_task = tg.create_task(self.track_controller.set_route(route, train_id))
+
+        # Only set the signal to go if the points and tracks are processed
+        if point_task.result() and track_task.result():
+            set_route_result.success = await self.signal_controller.set_route(route)
+            if not set_route_result.success:
+                await self.reset_route(yaramo_route, train_id)
+        else:
+            # Set route failed, so the route has to be reset
+            await self.reset_route(yaramo_route, train_id)
+            set_route_result.success = False
+        set_route_result.route_formation_time = time.time() - route_formation_time_start
+        return set_route_result
 
     def can_route_be_set(self, yaramo_route, train_id: str):
         route = self.get_route_from_yaramo_route(yaramo_route)
@@ -118,12 +159,12 @@ class Interlocking(object):
         self.track_controller.free_route(route, train_id)
         self.active_routes.remove(route)
 
-    def reset_route(self, yaramo_route, train_id: str):
+    async def reset_route(self, yaramo_route, train_id: str):
         route = self.get_route_from_yaramo_route(yaramo_route)
         self.point_controller.reset_route(route, train_id)
         self.track_controller.reset_route(route, train_id)
         self.train_detection_controller.reset_track_segments_of_route(route)
-        self.signal_controller.reset_route(route)
+        await self.signal_controller.reset_route(route)
         self.active_routes.remove(route)
 
     def get_route_from_yaramo_route(self, yaramo_route):

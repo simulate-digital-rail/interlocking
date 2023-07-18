@@ -174,3 +174,4 @@ poetry.toml
 
 data
 .idea/
+sumo-config/

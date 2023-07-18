@@ -1,11 +1,14 @@
 from interlocking.model import OccupancyState
+import asyncio
+import logging
 
 
 class PointController(object):
 
-    def __init__(self, infrastructure_providers):
+    def __init__(self, infrastructure_providers, settings):
         self.points = None
         self.infrastructure_providers = infrastructure_providers
+        self.settings = settings
 
     def reset(self):
         for point_id in self.points:
@@ -13,15 +16,21 @@ class PointController(object):
             self.points[point_id].state = OccupancyState.FREE
             self.points[point_id].used_by = set()
 
-    def set_route(self, route, train_id: str):
-        for point_orientations in route.get_necessary_point_orientations():
-            point = point_orientations[0]
-            orientation = point_orientations[1]
-            if orientation == "left" or orientation == "right":
-                self.turn_point(point, orientation)
-                self.set_point_reserved(point, train_id)
-            else:
-                raise ValueError("Turn should happen but is not possible")
+    async def set_route(self, route, train_id: str):
+        tasks = []
+        point_orientations = route.get_necessary_point_orientations()
+        for i in range(0, len(point_orientations), self.settings.max_number_of_points_at_same_time):
+            async with asyncio.TaskGroup() as tg:
+                for point_orientation in point_orientations[i:i+self.settings.max_number_of_points_at_same_time]:
+                    point = point_orientation[0]
+                    orientation = point_orientation[1]
+                    if orientation == "left" or orientation == "right":
+                        self.set_point_reserved(point, train_id)
+                        tasks.append(tg.create_task(self.turn_point(point, orientation)))
+                    else:
+                        raise ValueError("Turn should happen but is not possible")
+
+        return all(list(map(lambda task: task.result(), tasks)))
 
     def can_route_be_set(self, route, train_id: str):
         for point in route.get_points_of_route():
@@ -37,23 +46,35 @@ class PointController(object):
         points_of_route_2 = route_2.get_points_of_route()
         return len(points_of_route_1.intersection(points_of_route_2)) > 0
 
-    def turn_point(self, point, orientation):
+    async def turn_point(self, point, orientation):
         if point.orientation == orientation:
             # Everything is fine
-            return
-        print(f"--- Move point {point.point_id} to {orientation}")
-        point.orientation = orientation
+            return True
+        logging.info(f"--- Move point {point.point_id} to {orientation}")
+        # tasks = []
+        results = []
         for infrastructure_provider in self.infrastructure_providers:
-            infrastructure_provider.turn_point(point.yaramo_node, orientation)
+            results.append(await infrastructure_provider.turn_point(point.yaramo_node, orientation))
+
+        # async with asyncio.TaskGroup() as tg:
+        #    for infrastructure_provider in self.infrastructure_providers:
+        #        tasks.append(tg.create_task(infrastructure_provider.turn_point(point.yaramo_node, orientation)))
+        # if all(list(map(lambda task: task.result(), tasks))):
+        if all(results):
+            point.orientation = orientation
+            return True
+        else:
+            # TODO: Incident
+            return False
 
     def set_point_reserved(self, point, train_id: str):
-        print(f"--- Set point {point.point_id} to reserved")
+        logging.info(f"--- Set point {point.point_id} to reserved")
         point.state = OccupancyState.RESERVED
         point.used_by.add(train_id)
 
     def set_point_free(self, point, train_id: str):
         if point.state != OccupancyState.FREE:
-            print(f"--- Set point {point.point_id} to free")
+            logging.info(f"--- Set point {point.point_id} to free")
             point.state = OccupancyState.FREE
             point.used_by.remove(train_id)
 
@@ -62,7 +83,7 @@ class PointController(object):
             self.set_point_free(point, train_id)
 
     def print_state(self):
-        print("State of Points:")
+        logging.debug("State of Points:")
         for point_id in self.points:
             point = self.points[point_id]
-            print(f"{point.point_id}: {point.state} (Orientation: {point.orientation}) (used by: {point.used_by})")
+            logging.debug(f"{point.point_id}: {point.state} (Orientation: {point.orientation}) (used by: {point.used_by})")

@@ -1,6 +1,6 @@
 from .overlapcontroller import OverlapController
+from interlocking.model import OccupancyState, Route
 from yaramo.model import SignalDirection
-from interlocking.model import OccupancyState
 import logging
 
 
@@ -20,8 +20,8 @@ class TrackController(object):
                 segment.state = OccupancyState.FREE
                 segment.used_by = set()
 
-    def set_route(self, route, train_id: str):
-        self.reserve_route(route, train_id)
+    async def set_route(self, route, train_id: str):
+        return await self.reserve_route(route, train_id)
 
     def can_route_be_set(self, route, train_id: str):
         for segment in route.get_segments_of_route():
@@ -33,7 +33,7 @@ class TrackController(object):
             return False
         return self.overlap_controller.can_any_overlap_be_reserved(route, train_id)
 
-    def do_two_routes_collide(self, route_1, route_2):
+    def do_two_routes_collide(self, route_1: Route, route_2: Route):
         segments_of_route_1 = set(map(lambda seg: seg.segment_id, route_1.get_segments_of_route()))
         segments_of_route_2 = set(map(lambda seg: seg.segment_id, route_2.get_segments_of_route()))
         if len(segments_of_route_1.intersection(segments_of_route_2)) > 0:
@@ -74,39 +74,44 @@ class TrackController(object):
     def reset_route(self, route, train_id: str):
         for segment in route.get_segments_of_route():
             if segment.state != OccupancyState.FREE:
-                print(f"--- Set track {segment.segment_id} free")
+                logging.info(f"--- Set track {segment.segment_id} free")
                 segment.state = OccupancyState.FREE
                 segment.used_by.remove(train_id)
         self.overlap_controller.free_overlap_of_route(route, train_id)
 
-    def reserve_route(self, route, train_id: str):
+    async def reserve_route(self, route, train_id: str):
         for segment in route.get_segments_of_route():
-            print(f"--- Set track {segment.segment_id} reserved")
+            logging.info(f"--- Set track {segment.segment_id} reserved")
             segment.state = OccupancyState.RESERVED
             segment.used_by.add(train_id)
-        self.overlap_controller.reserve_overlap_of_route(route, train_id)
+        return await self.overlap_controller.reserve_overlap_of_route(route, train_id)
 
-    def occupy_segment_of_track(self, segment, train_id: str):
+    async def occupy_segment_of_track(self, segment, train_id: str):
         if segment.state != OccupancyState.OCCUPIED:
-            print(f"--- Set track {segment.segment_id} occupied")
+            logging.info(f"--- Set track {segment.segment_id} occupied")
             segment.state = OccupancyState.OCCUPIED
             if train_id not in segment.used_by:
                 raise ValueError(f"Train {train_id} is using a segment, which wasn't reserved before.")
 
             # Set signal to halt
+            success_first_signal = True
+            success_second_signal = True
             pos_of_segment = segment.track.get_position_of_segment(segment)
+
             if pos_of_segment > 0:
                 previous_signal = segment.track.signals[pos_of_segment - 1]
                 if previous_signal.yaramo_signal.direction == SignalDirection.IN:
-                    self.signal_controller.set_signal_halt(previous_signal)
+                    success_first_signal = await self.signal_controller.set_signal_halt(previous_signal)
             if pos_of_segment < len(segment.track.signals):
                 next_signal = segment.track.signals[pos_of_segment]
                 if next_signal.yaramo_signal.direction == SignalDirection.GEGEN:
-                    self.signal_controller.set_signal_halt(next_signal)
+                    success_second_signal = await self.signal_controller.set_signal_halt(next_signal)
+            return success_first_signal and success_second_signal
+        return True
 
     def free_segment_of_track(self, segment, train_id: str):
         if segment.state != OccupancyState.FREE:
-            print(f"--- Set track {segment.segment_id} free")
+            logging.info(f"--- Set track {segment.segment_id} free")
             segment.state = OccupancyState.FREE
             segment.used_by.remove(train_id)
 
@@ -132,8 +137,8 @@ class TrackController(object):
                     self.point_controller.set_point_free(segment.track.right_point, train_id)
 
     def print_state(self):
-        print("State of Tracks:")
+        logging.debug("State of Tracks:")
         for base_track_id in self.tracks:
             track = self.tracks[base_track_id]
             for segment in track.segments:
-                print(f"{segment.segment_id}: {segment.state} (used by: {segment.used_by})")
+                logging.debug(f"{segment.segment_id}: {segment.state} (used by: {segment.used_by})")

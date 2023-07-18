@@ -7,11 +7,12 @@ class TrainDetectionController(object):
             infrastructure_provider._set_tds_count_in_callback(self.count_in)
             infrastructure_provider._set_tds_count_out_callback(self.count_out)
 
-    def count_in(self, track_segment_id, train_id: str):
+    async def count_in(self, track_segment_id, train_id: str):
         if track_segment_id not in self.state:
             self.state[track_segment_id] = 0
         self.state[track_segment_id] = self.state[track_segment_id] + 1
-        self.track_controller.occupy_segment_of_track(self.get_segment_by_segment_id(track_segment_id), train_id)
+        return await self.track_controller.occupy_segment_of_track(self.get_segment_by_segment_id(track_segment_id),
+                                                                   train_id)
 
     def count_out(self, track_segment_id, train_id: str):
         if track_segment_id not in self.state:

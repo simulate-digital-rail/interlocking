@@ -1,4 +1,6 @@
 from interlocking.model import OccupancyState
+import asyncio
+import logging
 
 
 class OverlapController(object):
@@ -8,13 +10,14 @@ class OverlapController(object):
         self.track_controller = track_controller
         self.point_controller = point_controller
 
-    def reserve_overlap_of_route(self, route, train_id: str):
+    async def reserve_overlap_of_route(self, route, train_id: str):
         overlap = self.get_first_reservable_overlap(route, train_id)
         if overlap is None:
             raise ValueError("No reservable overlap found")
         self.reserve_segments_of_overlap(overlap, train_id)
-        self.reserve_points_of_overlap(overlap, train_id)
+        success = await self.reserve_points_of_overlap(overlap, train_id)
         route.overlap = overlap
+        return success
 
     def get_first_reservable_overlap(self, route, train_id: str):
         all_overlaps = route.get_overlaps_of_route()
@@ -43,28 +46,30 @@ class OverlapController(object):
 
     def reserve_segments_of_overlap(self, overlap, train_id: str):
         for segment in overlap.segments:
-            print(f"--- Set track {segment.segment_id} reserved (overlap)")
+            logging.info(f"--- Set track {segment.segment_id} reserved (overlap)")
             segment.state = OccupancyState.RESERVED_OVERLAP
             segment.used_by.add(train_id)
 
-    def reserve_points_of_overlap(self, overlap, train_id: str):
-        for point in overlap.points:
-            print(f"--- Set point {point.point_id} to reserved (overlap)")
-            point.state = OccupancyState.RESERVED_OVERLAP
-            point.used_by.add(train_id)
+    async def reserve_points_of_overlap(self, overlap, train_id: str):
+        tasks = []
+        async with asyncio.TaskGroup() as tg:
+            for point in overlap.points:
+                logging.info(f"--- Set point {point.point_id} to reserved (overlap)")
+                point.state = OccupancyState.RESERVED_OVERLAP
+                point.used_by.add(train_id)
+                if point.is_point:
+                    # Get necessary orientation
+                    points_tracks = [point.head, point.left, point.right]
+                    found_tracks = []
+                    for track in points_tracks:
+                        if track in set(map(lambda seg: seg.track, overlap.segments)):
+                            found_tracks.append(track)
 
-            if point.is_point:
-                # Get necessary orientation
-                points_tracks = [point.head, point.left, point.right]
-                found_tracks = []
-                for track in points_tracks:
-                    if track in set(map(lambda seg: seg.track, overlap.segments)):
-                        found_tracks.append(track)
-
-                if len(found_tracks) != 2:
-                    raise ValueError("Overlap contains points without 2 of their tracks")
-                necessery_orientation = point.get_necessary_orientation(found_tracks[0], found_tracks[1])
-                self.point_controller.turn_point(point, necessery_orientation)
+                    if len(found_tracks) != 2:
+                        raise ValueError("Overlap contains points without 2 of their tracks")
+                    necessery_orientation = point.get_necessary_orientation(found_tracks[0], found_tracks[1])
+                    tasks.append(tg.create_task(self.point_controller.turn_point(point, necessery_orientation)))
+        return all(list(map(lambda task: task.result(), tasks)))
 
     def free_overlap_of_route(self, route, train_id: str):
         overlap = route.overlap
@@ -77,7 +82,7 @@ class OverlapController(object):
         for segment in overlap.segments:
             if not self.is_segment_used_in_any_other_overlap(segment, route) and \
                     segment.state == OccupancyState.RESERVED_OVERLAP:
-                print(f"--- Set track {segment.segment_id} free")
+                logging.info(f"--- Set track {segment.segment_id} free")
                 segment.state = OccupancyState.FREE
                 segment.used_by.remove(train_id)
 
