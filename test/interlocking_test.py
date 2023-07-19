@@ -212,7 +212,7 @@ def test_failing_signal():
     asyncio.run(interlockinghelper.set_route(interlocking, route_bs2_bs3, True, "RB101"))
 
 
-class TestFreeRouteWithoutSettingRouteBefore(unittest.TestCase):
+class TestFreeRouteExceptions(unittest.TestCase):
 
     def test_free_route_without_setting_route_before(self):
         topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
@@ -223,10 +223,7 @@ class TestFreeRouteWithoutSettingRouteBefore(unittest.TestCase):
             interlocking.free_route(some_route, "RB101")
 
         self.assertEqual(str(exception.exception), f"Route from {some_route.start_signal.name} to "
-                                                   f"{some_route.end_signal.name} is not set.")
-
-
-class TestFreeRouteWithWrongTrainID(unittest.TestCase):
+                                                   f"{some_route.end_signal.name} was not set.")
 
     def test_free_route_with_wrong_train_id(self):
         topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
@@ -245,7 +242,7 @@ class TestFreeRouteWithWrongTrainID(unittest.TestCase):
                                                    f"{other_train_id}.")
 
 
-class TestResetRouteWithoutSettingRouteBefore(unittest.TestCase):
+class TestResetRouteExceptions(unittest.TestCase):
 
     def test_reset_route_without_setting_route_before(self):
         topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
@@ -256,10 +253,7 @@ class TestResetRouteWithoutSettingRouteBefore(unittest.TestCase):
             asyncio.run(interlocking.reset_route(some_route, "RB101"))
 
         self.assertEqual(str(exception.exception), f"Route from {some_route.start_signal.name} to "
-                                                   f"{some_route.end_signal.name} is not set.")
-
-
-class TestResetRouteWithWrongTrainID(unittest.TestCase):
+                                                   f"{some_route.end_signal.name} was not set.")
 
     def test_reset_route_with_wrong_train_id(self):
         topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
