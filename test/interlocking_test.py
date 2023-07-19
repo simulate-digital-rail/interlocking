@@ -3,6 +3,7 @@ from interlocking.model import OccupancyState
 from interlocking.infrastructureprovider import RandomWaitInfrastructureProvider
 from yaramo.model import Route as YaramoRoute, Signal as YaramoSignal, Edge as YaramoEdge, Node as YaramoNode
 import asyncio
+import unittest
 
 
 def test_reset():
@@ -210,6 +211,71 @@ def test_failing_signal():
     route_bs2_bs3 = topologyhelper.get_route_by_signal_names(topology, "60BS2", "60BS3")
     asyncio.run(interlockinghelper.set_route(interlocking, route_bs2_bs3, True, "RB101"))
 
+
+class TestFreeRouteWithoutSettingRouteBefore(unittest.TestCase):
+
+    def test_free_route_without_setting_route_before(self):
+        topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
+        interlocking = interlockinghelper.get_interlocking(topology)
+
+        some_route: YaramoRoute = list(topology.routes.values())[0]
+        with self.assertRaises(Exception) as exception:
+            interlocking.free_route(some_route, "RB101")
+
+        self.assertEqual(str(exception.exception), f"Route from {some_route.start_signal.name} to "
+                                                   f"{some_route.end_signal.name} is not set.")
+
+
+class TestFreeRouteWithWrongTrainID(unittest.TestCase):
+
+    def test_free_route_with_wrong_train_id(self):
+        topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
+        interlocking = interlockinghelper.get_interlocking(topology)
+
+        some_route: YaramoRoute = list(topology.routes.values())[0]
+        correct_train_id = "RB101"
+        other_train_id = "OtherTrainID102"
+        asyncio.run(interlockinghelper.set_route(interlocking, some_route, True, correct_train_id))
+
+        with self.assertRaises(Exception) as exception:
+            interlocking.free_route(some_route, other_train_id)
+
+        self.assertEqual(str(exception.exception), f"Wrong Train ID: The route from {some_route.start_signal.name} to "
+                                                   f"{some_route.end_signal.name} was not set with the train id "
+                                                   f"{other_train_id}.")
+
+
+class TestResetRouteWithoutSettingRouteBefore(unittest.TestCase):
+
+    def test_reset_route_without_setting_route_before(self):
+        topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
+        interlocking = interlockinghelper.get_interlocking(topology)
+
+        some_route: YaramoRoute = list(topology.routes.values())[0]
+        with self.assertRaises(Exception) as exception:
+            asyncio.run(interlocking.reset_route(some_route, "RB101"))
+
+        self.assertEqual(str(exception.exception), f"Route from {some_route.start_signal.name} to "
+                                                   f"{some_route.end_signal.name} is not set.")
+
+
+class TestResetRouteWithWrongTrainID(unittest.TestCase):
+
+    def test_reset_route_with_wrong_train_id(self):
+        topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
+        interlocking = interlockinghelper.get_interlocking(topology)
+
+        some_route: YaramoRoute = list(topology.routes.values())[0]
+        correct_train_id = "RB101"
+        other_train_id = "OtherTrainID102"
+        asyncio.run(interlockinghelper.set_route(interlocking, some_route, True, correct_train_id))
+
+        with self.assertRaises(Exception) as exception:
+            asyncio.run(interlocking.reset_route(some_route, other_train_id))
+
+        self.assertEqual(str(exception.exception), f"Wrong Train ID: The route from {some_route.start_signal.name} to "
+                                                   f"{some_route.end_signal.name} was not set with the train id "
+                                                   f"{other_train_id}.")
 
 # if __name__ == "__main__":
     # logging.basicConfig(level=logging.DEBUG)
