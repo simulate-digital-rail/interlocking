@@ -210,7 +210,6 @@ def test_failing_signal():
     route_bs2_bs3 = topologyhelper.get_route_by_signal_names(topology, "60BS2", "60BS3")
     asyncio.run(interlockinghelper.set_route(interlocking, route_bs2_bs3, True, "RB101"))
 
-
 # if __name__ == "__main__":
     # logging.basicConfig(level=logging.DEBUG)
     # test_driving()
