@@ -6,7 +6,6 @@ import asyncio
 
 
 def test_reset():
-    print("test")
     topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
     interlocking = interlockinghelper.get_interlocking(topology)
     route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
@@ -24,6 +23,8 @@ def test_reset():
     interlockinghelper.test_signal(interlocking, "60ES2", "go")
     interlockinghelper.test_point(interlocking, "fd73d", "RB102", "right", OccupancyState.RESERVED)
 
+    assert len(interlocking.active_routes) == 2
+
     asyncio.run(interlocking.reset())
 
     interlockinghelper.test_track(interlocking, "94742-0", "RB101", OccupancyState.FREE)
@@ -35,6 +36,8 @@ def test_reset():
     interlockinghelper.test_track(interlocking, "3a70a-0", "RB102", OccupancyState.FREE)
     interlockinghelper.test_signal(interlocking, "60ES2", "halt")
     interlockinghelper.test_point(interlocking, "fd73d", "RB102", "undefined", OccupancyState.FREE)
+
+    assert len(interlocking.active_routes) == 0
 
 
 def test_print_state():
@@ -209,6 +212,48 @@ def test_failing_signal():
     asyncio.run(interlockinghelper.set_route(interlocking, route_bs1_bs2, False, "RB101"))
     route_bs2_bs3 = topologyhelper.get_route_by_signal_names(topology, "60BS2", "60BS3")
     asyncio.run(interlockinghelper.set_route(interlocking, route_bs2_bs3, True, "RB101"))
+
+
+def test_consecutive_routes():
+    topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
+    interlocking = interlockinghelper.get_interlocking(topology)
+
+    # Consecutive routes, everything fine.
+    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
+    route_2 = topologyhelper.get_route_by_signal_names(topology, "60BS2", "60BS3")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_2, True, "RB101"))
+
+    asyncio.run(interlocking.reset())
+
+    # Totally different routes, not allowed
+    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
+    route_2 = topologyhelper.get_route_by_signal_names(topology, "60ES1", "60AS1")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_2, False, "RB101"))
+
+    asyncio.run(interlocking.reset())
+
+    # Reduce speed to avoid overlap
+    for route in interlocking.routes:
+        route.yaramo_route.maximum_speed = 30
+
+    # Overlapping routes without overlap, not allowed
+    # (caused issue https://github.com/simulate-digital-rail/interlocking/issues/14)
+    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
+    route_2 = topologyhelper.get_route_by_signal_names(topology, "60BS6", "60BS7")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_2, False, "RB101"))
+
+    asyncio.run(interlocking.reset())
+
+    # Test three in a row consecutive routes, everything fine
+    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60ES1")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
+    route_2 = topologyhelper.get_route_by_signal_names(topology, "60ES1", "60AS1")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_2, True, "RB101"))
+    route_3 = topologyhelper.get_route_by_signal_names(topology, "60AS1", "60BS3")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_3, True, "RB101"))
 
 
 # if __name__ == "__main__":
