@@ -5,8 +5,8 @@ import logging
 
 class LoggingInfrastructureProvider(InfrastructureProvider):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     async def set_signal_state(self, yaramo_signal, target_state):
         logging.info(f"{time.strftime('%X')} Set signal {yaramo_signal.name} to {target_state}")
