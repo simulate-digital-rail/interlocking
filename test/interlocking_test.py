@@ -257,6 +257,30 @@ def test_consecutive_routes():
     asyncio.run(interlockinghelper.set_route(interlocking, route_3, True, "RB101"))
 
 
+class TestConsecutiveRouteDetectionWithTwoLastTracks(unittest.TestCase):
+
+    def test_consecutive_route_detection_with_two_last_tracks(self):
+        topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
+        interlocking = interlockinghelper.get_interlocking(topology)
+
+        route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
+        route_2 = topologyhelper.get_route_by_signal_names(topology, "60ES1", "60AS1")
+        route_3 = topologyhelper.get_route_by_signal_names(topology, "60AS1", "60BS3")
+
+        ixl_route_1 = interlocking.get_route_from_yaramo_route(route_1)
+        ixl_route_2 = interlocking.get_route_from_yaramo_route(route_2)
+
+        ixl_route_1.used_by = "RB101"
+        ixl_route_2.used_by = "RB101"
+        interlocking.active_routes.append(ixl_route_1)
+        interlocking.active_routes.append(ixl_route_2)
+
+        with self.assertRaises(ValueError) as error:
+            asyncio.run(interlocking.set_route(route_3, "RB101"))
+
+        self.assertEqual(str(error.exception), "Multiple last routes found")
+
+
 class TestFreeRouteExceptions(unittest.TestCase):
 
     def test_free_route_without_setting_route_before(self):

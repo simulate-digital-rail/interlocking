@@ -217,4 +217,5 @@ class Interlocking(object):
                 if last_route is not None:
                     raise ValueError("Multiple last routes found")
                 last_route = route
-        return last_route.end_signal.yaramo_signal.name == new_route.start_signal.name
+        return last_route.end_signal.yaramo_signal.name == new_route.start_signal.name and \
+            last_route.start_signal.yaramo_signal.name != new_route.end_signal.name
