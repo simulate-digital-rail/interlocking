@@ -122,7 +122,8 @@ class Interlocking(object):
         if not self.can_route_be_set(yaramo_route, train_id):
             set_route_result.success = False
             return set_route_result
-        route = self.get_route_from_yaramo_route(yaramo_route)
+        route: Route = self.get_route_from_yaramo_route(yaramo_route)
+        route.used_by = train_id
         self.active_routes.append(route)
 
         async with asyncio.TaskGroup() as tg:
@@ -155,17 +156,33 @@ class Interlocking(object):
         return do_collide
 
     def free_route(self, yaramo_route, train_id: str):
-        route = self.get_route_from_yaramo_route(yaramo_route)
+        route: Route = self.get_route_from_yaramo_route(yaramo_route)
+        if route not in self.active_routes:
+            raise Exception(f"Route from {yaramo_route.start_signal.name} to "
+                            f"{yaramo_route.end_signal.name} was not set.")
+        if route.used_by != train_id:
+            raise Exception(f"Wrong Train ID: The route from {yaramo_route.start_signal.name} to "
+                            f"{yaramo_route.end_signal.name} was not set with the train id "
+                            f"{train_id}.")
         self.track_controller.free_route(route, train_id)
         self.active_routes.remove(route)
+        route.used_by = None
 
     async def reset_route(self, yaramo_route, train_id: str):
-        route = self.get_route_from_yaramo_route(yaramo_route)
+        route: Route = self.get_route_from_yaramo_route(yaramo_route)
+        if route not in self.active_routes:
+            raise Exception(f"Route from {yaramo_route.start_signal.name} to "
+                            f"{yaramo_route.end_signal.name} was not set.")
+        if route.used_by != train_id:
+            raise Exception(f"Wrong Train ID: The route from {yaramo_route.start_signal.name} to "
+                            f"{yaramo_route.end_signal.name} was not set with the train id "
+                            f"{train_id}.")
         self.point_controller.reset_route(route, train_id)
         self.track_controller.reset_route(route, train_id)
         self.train_detection_controller.reset_track_segments_of_route(route)
         await self.signal_controller.reset_route(route)
         self.active_routes.remove(route)
+        route.used_by = None
 
     def get_route_from_yaramo_route(self, yaramo_route):
         for route in self.routes:
