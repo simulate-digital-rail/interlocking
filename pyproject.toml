@@ -10,6 +10,7 @@ python = "^3.11"
 yaramo = { git = "https://github.com/simulate-digital-rail/yaramo" }
 planpro-importer = { git = "https://github.com/simulate-digital-rail/planpro-importer" }
 railway-route-generator = { git = "https://github.com/simulate-digital-rail/railway-route-generator" }
+interlocking-logic-monitor = { git = "https://github.com/simulate-digital-rail/interlocking-logic-monitor" }
 #yaramo = { git = "https://github.com/bp2022-ap1/yaramo", branch="refactor/replace-connected-nodes-with-edges" }
 #planpro-importer = { git = "https://github.com/bp2022-ap1/planpro-importer", branch = "refactor/replace-connected-nodes-edges" }
 #railway-route-generator = { git = "https://github.com/bp2022-ap1/railway-route-generator", branch = "refactor/replace-connected-nodes-edges" }
