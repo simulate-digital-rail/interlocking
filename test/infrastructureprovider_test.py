@@ -75,7 +75,7 @@ def test_only_apply_for():
     route_es1_as1 = topologyhelper.get_route_by_signal_names(topology, "60ES1", "60AS1")
     asyncio.run(interlockinghelper.set_route(interlocking, route_es1_as1, True, "RB101"))
     route_bs2_bs3 = topologyhelper.get_route_by_signal_names(topology, "60BS2", "60BS3")
-    asyncio.run(interlockinghelper.set_route(interlocking, route_bs2_bs3, True, "RB101"))
+    asyncio.run(interlockinghelper.set_route(interlocking, route_bs2_bs3, True, "RB102"))
 
     signal_es1 = interlockinghelper.get_interlocking_signal_by_name(interlocking, "60ES1").yaramo_signal
     signal_bs2 = interlockinghelper.get_interlocking_signal_by_name(interlocking, "60BS2").yaramo_signal
@@ -97,7 +97,7 @@ def test_apply_for_all_except():
     route_es1_as1 = topologyhelper.get_route_by_signal_names(topology, "60ES1", "60AS1")
     asyncio.run(interlockinghelper.set_route(interlocking, route_es1_as1, True, "RB101"))
     route_bs2_bs3 = topologyhelper.get_route_by_signal_names(topology, "60BS2", "60BS3")
-    asyncio.run(interlockinghelper.set_route(interlocking, route_bs2_bs3, True, "RB101"))
+    asyncio.run(interlockinghelper.set_route(interlocking, route_bs2_bs3, True, "RB102"))
 
     signal_es1 = interlockinghelper.get_interlocking_signal_by_name(interlocking, "60ES1").yaramo_signal
     signal_bs2 = interlockinghelper.get_interlocking_signal_by_name(interlocking, "60BS2").yaramo_signal
