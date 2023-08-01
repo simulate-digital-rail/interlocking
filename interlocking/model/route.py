@@ -12,6 +12,7 @@ class Route(object):
         self.end_signal = None
         self.tracks = []
         self.overlap = None
+        self.used_by = None
 
     def contains_segment(self, segment):
         for track in self.tracks:

@@ -1,7 +1,7 @@
 from interlocking.interlockinginterface import Interlocking
 from interlocking.infrastructureprovider import InfrastructureProvider, LoggingInfrastructureProvider
 from yaramo.model import Route, Topology
-from interlocking.model import OccupancyState, TrackSegment, Track, Signal
+from interlocking.model import OccupancyState, TrackSegment, Track, Signal, Point
 
 
 def get_interlocking(topology: Topology, infrastructure_provider: list[InfrastructureProvider] = None):
@@ -22,6 +22,19 @@ async def set_route(interlocking: Interlocking, route: Route, should_be_able_to_
 
 def free_route(interlocking: Interlocking, route: Route, train_id: str):
     interlocking.free_route(route, train_id)
+
+
+def get_interlocking_signal_by_name(interlocking: Interlocking, signal_name: str):
+    for signal_uuid in interlocking.signal_controller.signals:
+        signal = interlocking.signal_controller.signals[signal_uuid]
+        if signal.yaramo_signal.name == signal_name:
+            return signal
+
+
+def get_interlocking_point_by_id(interlocking: Interlocking, point_id: str):
+    for _point_id in interlocking.point_controller.points:
+        if _point_id == point_id:
+            return interlocking.point_controller.points[point_id]
 
 
 def test_point(interlocking: Interlocking, point_id: str, train_id: str, orientation: str, state: OccupancyState):

@@ -51,7 +51,7 @@ def test_example_1():
     assert point.orientation == "left"
     assert point.state == OccupancyState.RESERVED
 
-    flank_protection_signal = topologyhelper.get_interlocking_signal_by_name(interlocking, "99N3")
+    flank_protection_signal = interlockinghelper.get_interlocking_signal_by_name(interlocking, "99N3")
     assert flank_protection_signal.signal_aspect == "halt"
     assert track_operations_ip.was_signal_set_to_aspect(flank_protection_signal.yaramo_signal, "halt")
     assert flank_protection_signal.state == OccupancyState.FLANK_PROTECTION
@@ -112,7 +112,7 @@ def test_example_3():
     assert flank_protection_point.state == OccupancyState.FLANK_PROTECTION
     assert "RB101" in flank_protection_point.used_by
 
-    flank_protection_signal = topologyhelper.get_interlocking_signal_by_name(interlocking, "60E2")
+    flank_protection_signal = interlockinghelper.get_interlocking_signal_by_name(interlocking, "60E2")
     assert flank_protection_signal.signal_aspect == "halt"
     assert track_operations_ip.was_signal_set_to_aspect(flank_protection_signal.yaramo_signal, "halt")
     assert flank_protection_signal.state == OccupancyState.FLANK_PROTECTION
@@ -132,6 +132,7 @@ def test_example_4():
     route = topologyhelper.get_route_by_signal_names(topology, "60S4", "60S3")
     asyncio.run(interlockinghelper.set_route(interlocking, route, True, "RB102"))
     interlocking.print_state()
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)

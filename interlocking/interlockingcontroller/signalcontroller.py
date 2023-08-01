@@ -35,12 +35,12 @@ class SignalController(object):
 
         results = []
         for infrastructure_provider in self.infrastructure_providers:
-            results.append(await infrastructure_provider.set_signal_aspect(signal.yaramo_signal, signal_aspect))
+            results.append(await infrastructure_provider.call_set_signal_aspect(signal.yaramo_signal, signal_aspect))
 
         # tasks = []
         # async with asyncio.TaskGroup() as tg:
         #    for infrastructure_provider in self.infrastructure_providers:
-        #        tasks.append(tg.create_task(infrastructure_provider.set_signal_state(signal.yaramo_signal, state)))
+        #        tasks.append(tg.create_task(infrastructure_provider.call_set_signal_aspect(signal.yaramo_signal, state)))
         # if all(list(map(lambda task: task.result(), tasks))):
         if all(results):
             signal.signal_aspect = signal_aspect

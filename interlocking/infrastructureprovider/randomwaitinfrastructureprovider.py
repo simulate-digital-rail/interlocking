@@ -15,8 +15,8 @@ class RandomWaitInfrastructureProvider(InfrastructureProvider):
 
     def __init__(self, fail_probability=0.0, signal_time_range: range = range(2, 5),
                  point_turn_time_range: range = range(5, 8), always_succeed_for: list[str] = None,
-                 always_fail_for: list[str] = None):
-        super().__init__()
+                 always_fail_for: list[str] = None, **kwargs):
+        super().__init__(**kwargs)
         if always_succeed_for is None:
             always_succeed_for = []
         if always_fail_for is None:

@@ -1,43 +1,46 @@
-#from .helper import topologyhelper, interlockinghelper
-import helper
+from .helper import topologyhelper, interlockinghelper
 from interlocking.model import OccupancyState
 from interlocking.infrastructureprovider import RandomWaitInfrastructureProvider
 from yaramo.model import Route as YaramoRoute, Signal as YaramoSignal, Edge as YaramoEdge, Node as YaramoNode
 import asyncio
-import logging
+import unittest
 
 
 def test_reset():
-    topology = helper.get_topology_from_planpro_file("./complex-example.ppxml")
-    interlocking = helper.get_interlocking(topology)
-    route_1 = helper.get_route_by_signal_names(topology, "60BS1", "60BS2")
-    asyncio.run(helper.set_route(interlocking, route_1, True, "RB101"))
-    interlocking.print_state()
-    route_2 = helper.get_route_by_signal_names(topology, "60ES2", "60AS3")
-    asyncio.run(helper.set_route(interlocking, route_2, True, "RB102"))
-    interlocking.print_state()
+    topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
+    interlocking = interlockinghelper.get_interlocking(topology)
+    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
 
-    helper.test_track(interlocking, "94742-0", "RB101", OccupancyState.RESERVED)
-    helper.test_track(interlocking, "b8e69-3", "RB101", OccupancyState.RESERVED_OVERLAP)
-    helper.test_track(interlocking, "a8f44-0", "RB101", OccupancyState.FREE)
-    helper.test_signal(interlocking, "60BS1", "RB101", "go", OccupancyState.RESERVED)
-    helper.test_point(interlocking, "d43f9", "RB101", "left", OccupancyState.RESERVED)
+    interlocking.print_state()
+    route_2 = topologyhelper.get_route_by_signal_names(topology, "60ES2", "60AS3")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_2, True, "RB102"))
 
-    helper.test_track(interlocking, "3a70a-0", "RB102", OccupancyState.RESERVED)
-    helper.test_signal(interlocking, "60ES2", "RB101", "go", OccupancyState.RESERVED)
-    helper.test_point(interlocking, "fd73d", "RB102", "right", OccupancyState.RESERVED)
+    interlockinghelper.test_track(interlocking, "94742-0", "RB101", OccupancyState.RESERVED)
+    interlockinghelper.test_track(interlocking, "b8e69-3", "RB101", OccupancyState.RESERVED_OVERLAP)
+    interlockinghelper.test_track(interlocking, "a8f44-0", "RB101", OccupancyState.FREE)
+    interlockinghelper.test_signal(interlocking, "60BS1", "RB101", "go", OccupancyState.RESERVED)
+    interlockinghelper.test_point(interlocking, "d43f9", "RB101", "left", OccupancyState.RESERVED)
+
+    interlockinghelper.test_track(interlocking, "3a70a-0", "RB102", OccupancyState.RESERVED)
+    interlockinghelper.test_signal(interlocking, "60ES2", "RB102", "go", OccupancyState.RESERVED)
+    interlockinghelper.test_point(interlocking, "fd73d", "RB102", "right", OccupancyState.RESERVED)
+
+    assert len(interlocking.active_routes) == 2
 
     asyncio.run(interlocking.reset())
 
-    helper.test_track(interlocking, "94742-0", "RB101", OccupancyState.FREE)
-    helper.test_track(interlocking, "b8e69-3", "RB101", OccupancyState.FREE)
-    helper.test_track(interlocking, "a8f44-0", "RB101", OccupancyState.FREE)
-    helper.test_signal(interlocking, "60BS1", "RB101", "halt", OccupancyState.FREE)
-    helper.test_point(interlocking, "d43f9", "RB101", "undefined", OccupancyState.FREE)
+    interlockinghelper.test_track(interlocking, "94742-0", "RB101", OccupancyState.FREE)
+    interlockinghelper.test_track(interlocking, "b8e69-3", "RB101", OccupancyState.FREE)
+    interlockinghelper.test_track(interlocking, "a8f44-0", "RB101", OccupancyState.FREE)
+    interlockinghelper.test_signal(interlocking, "60BS1", "RB101", "halt", OccupancyState.FREE)
+    interlockinghelper.test_point(interlocking, "d43f9", "RB101", "undefined", OccupancyState.FREE)
 
-    helper.test_track(interlocking, "3a70a-0", "RB102", OccupancyState.FREE)
-    helper.test_signal(interlocking, "60ES2", "RB101", "halt", OccupancyState.FREE)
-    helper.test_point(interlocking, "fd73d", "RB102", "undefined", OccupancyState.FREE)
+    interlockinghelper.test_track(interlocking, "3a70a-0", "RB102", OccupancyState.FREE)
+    interlockinghelper.test_signal(interlocking, "60ES2", "RB102", "halt", OccupancyState.FREE)
+    interlockinghelper.test_point(interlocking, "fd73d", "RB102", "undefined", OccupancyState.FREE)
+
+    assert len(interlocking.active_routes) == 0
 
 
 def test_print_state():
@@ -214,7 +217,132 @@ def test_failing_signal():
     asyncio.run(interlockinghelper.set_route(interlocking, route_bs2_bs3, True, "RB101"))
 
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    test_reset()
+def test_consecutive_routes():
+    topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
+    interlocking = interlockinghelper.get_interlocking(topology)
+
+    # Consecutive routes, everything fine.
+    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
+    route_2 = topologyhelper.get_route_by_signal_names(topology, "60BS2", "60BS3")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_2, True, "RB101"))
+
+    asyncio.run(interlocking.reset())
+
+    # Totally different routes, not allowed
+    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
+    route_2 = topologyhelper.get_route_by_signal_names(topology, "60ES1", "60AS1")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_2, False, "RB101"))
+
+    asyncio.run(interlocking.reset())
+
+    # Reduce speed to avoid overlap
+    for route in interlocking.routes:
+        route.yaramo_route.maximum_speed = 30
+
+    # Overlapping routes without overlap, not allowed
+    # (caused issue https://github.com/simulate-digital-rail/interlocking/issues/14)
+    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
+    route_2 = topologyhelper.get_route_by_signal_names(topology, "60BS6", "60BS7")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_2, False, "RB101"))
+
+    asyncio.run(interlocking.reset())
+
+    # Test three in a row consecutive routes, everything fine
+    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60ES1")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
+    route_2 = topologyhelper.get_route_by_signal_names(topology, "60ES1", "60AS1")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_2, True, "RB101"))
+    route_3 = topologyhelper.get_route_by_signal_names(topology, "60AS1", "60BS3")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_3, True, "RB101"))
+
+
+class TestConsecutiveRouteDetectionWithTwoLastTracks(unittest.TestCase):
+
+    def test_consecutive_route_detection_with_two_last_tracks(self):
+        topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
+        interlocking = interlockinghelper.get_interlocking(topology)
+
+        route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
+        route_2 = topologyhelper.get_route_by_signal_names(topology, "60ES1", "60AS1")
+        route_3 = topologyhelper.get_route_by_signal_names(topology, "60AS1", "60BS3")
+
+        ixl_route_1 = interlocking.get_route_from_yaramo_route(route_1)
+        ixl_route_2 = interlocking.get_route_from_yaramo_route(route_2)
+
+        ixl_route_1.used_by = "RB101"
+        ixl_route_2.used_by = "RB101"
+        interlocking.active_routes.append(ixl_route_1)
+        interlocking.active_routes.append(ixl_route_2)
+
+        with self.assertRaises(ValueError) as error:
+            asyncio.run(interlocking.set_route(route_3, "RB101"))
+
+        self.assertEqual(str(error.exception), "Multiple last routes found")
+
+
+class TestFreeRouteExceptions(unittest.TestCase):
+
+    def test_free_route_without_setting_route_before(self):
+        topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
+        interlocking = interlockinghelper.get_interlocking(topology)
+
+        some_route: YaramoRoute = list(topology.routes.values())[0]
+        with self.assertRaises(Exception) as exception:
+            interlocking.free_route(some_route, "RB101")
+
+        self.assertEqual(str(exception.exception), f"Route from {some_route.start_signal.name} to "
+                                                   f"{some_route.end_signal.name} was not set.")
+
+    def test_free_route_with_wrong_train_id(self):
+        topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
+        interlocking = interlockinghelper.get_interlocking(topology)
+
+        some_route: YaramoRoute = list(topology.routes.values())[0]
+        correct_train_id = "RB101"
+        other_train_id = "OtherTrainID102"
+        asyncio.run(interlockinghelper.set_route(interlocking, some_route, True, correct_train_id))
+
+        with self.assertRaises(Exception) as exception:
+            interlocking.free_route(some_route, other_train_id)
+
+        self.assertEqual(str(exception.exception), f"Wrong Train ID: The route from {some_route.start_signal.name} to "
+                                                   f"{some_route.end_signal.name} was not set with the train id "
+                                                   f"{other_train_id}.")
+
+
+class TestResetRouteExceptions(unittest.TestCase):
+
+    def test_reset_route_without_setting_route_before(self):
+        topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
+        interlocking = interlockinghelper.get_interlocking(topology)
+
+        some_route: YaramoRoute = list(topology.routes.values())[0]
+        with self.assertRaises(Exception) as exception:
+            asyncio.run(interlocking.reset_route(some_route, "RB101"))
+
+        self.assertEqual(str(exception.exception), f"Route from {some_route.start_signal.name} to "
+                                                   f"{some_route.end_signal.name} was not set.")
+
+    def test_reset_route_with_wrong_train_id(self):
+        topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
+        interlocking = interlockinghelper.get_interlocking(topology)
+
+        some_route: YaramoRoute = list(topology.routes.values())[0]
+        correct_train_id = "RB101"
+        other_train_id = "OtherTrainID102"
+        asyncio.run(interlockinghelper.set_route(interlocking, some_route, True, correct_train_id))
+
+        with self.assertRaises(Exception) as exception:
+            asyncio.run(interlocking.reset_route(some_route, other_train_id))
+
+        self.assertEqual(str(exception.exception), f"Wrong Train ID: The route from {some_route.start_signal.name} to "
+                                                   f"{some_route.end_signal.name} was not set with the train id "
+                                                   f"{other_train_id}.")
+
+
+# if __name__ == "__main__":
+    # logging.basicConfig(level=logging.DEBUG)
     # test_driving()

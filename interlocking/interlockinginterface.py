@@ -1,6 +1,9 @@
 from interlocking.interlockingcontroller import PointController, SignalController, TrackController, TrainDetectionController
+from interlocking.infrastructureprovider import InfrastructureProvider
 from interlocking.model import Point, Track, Signal, Route
 from interlocking.model.helper import SetRouteResult, Settings, InterlockingOperationType
+from interlockinglogicmonitor import InterlockingLogicMonitor
+from yaramo.model import Route as YaramoRoute
 import asyncio
 import time
 import logging
@@ -8,18 +11,22 @@ import logging
 
 class Interlocking(object):
 
-    def __init__(self, infrastructure_providers, settings=Settings()):
+    def __init__(self,
+                 infrastructure_providers,
+                 settings=Settings(),
+                 interlocking_logic_monitor: InterlockingLogicMonitor = None):
         if not isinstance(infrastructure_providers, list):
             infrastructure_providers = [infrastructure_providers]
-        self.infrastructure_providers = infrastructure_providers
+        self.infrastructure_providers: list[InfrastructureProvider] = infrastructure_providers
         self.settings = settings
+        self.interlocking_logic_monitor = interlocking_logic_monitor
 
         self.signal_controller = SignalController(self.infrastructure_providers)
         self.point_controller = PointController(self.signal_controller, self.infrastructure_providers, self.settings)
         self.track_controller = TrackController(self, self.point_controller, self.signal_controller)
         self.train_detection_controller = TrainDetectionController(self.track_controller, self.infrastructure_providers)
-        self.routes = []
-        self.active_routes = []
+        self.routes: list[Route] = []
+        self.active_routes: list[Route] = []
 
     def prepare(self, yaramo_topoloy):
         # Nodes
@@ -37,6 +44,12 @@ class Interlocking(object):
             signal = Signal(yaramo_signal)
             signals[yaramo_signal.uuid] = signal
         self.signal_controller.signals = signals
+
+        new_ip = InfrastructureProvider.verify_all_elements_covered_by_infrastructure_provider(yaramo_topoloy,
+                                                                                               self.infrastructure_providers,
+                                                                                               self.settings)
+        if new_ip is not None:
+            self.infrastructure_providers.append(new_ip)
 
         # Tracks
         tracks = dict()
@@ -116,13 +129,20 @@ class Interlocking(object):
             logging.debug(active_route.to_string())
         logging.debug("##############")
 
-    async def set_route(self, yaramo_route, train_id: str):
+    async def set_route(self, yaramo_route: YaramoRoute, train_id: str):
         route_formation_time_start = time.time()
         set_route_result = SetRouteResult()
+
+        # Test, if train is already on track and if yes, check for consecutive routes:
+        if not self._is_route_valid_consecutive_route(yaramo_route, train_id):
+            set_route_result.success = False
+            return set_route_result
+
         if not self.can_route_be_set(yaramo_route, train_id):
             set_route_result.success = False
             return set_route_result
-        route = self.get_route_from_yaramo_route(yaramo_route)
+        route: Route = self.get_route_from_yaramo_route(yaramo_route)
+        route.used_by = train_id
         self.active_routes.append(route)
 
         async with asyncio.TaskGroup() as tg:
@@ -138,7 +158,10 @@ class Interlocking(object):
             # Set route failed, so the route has to be reset
             await self.reset_route(yaramo_route, train_id)
             set_route_result.success = False
+
         set_route_result.route_formation_time = time.time() - route_formation_time_start
+        if self.interlocking_logic_monitor is not None:
+            self.interlocking_logic_monitor.monitor_set_route(yaramo_route)
         return set_route_result
 
     def can_route_be_set(self, yaramo_route, train_id: str):
@@ -155,21 +178,63 @@ class Interlocking(object):
         return do_collide
 
     def free_route(self, yaramo_route, train_id: str):
-        route = self.get_route_from_yaramo_route(yaramo_route)
+        route: Route = self.get_route_from_yaramo_route(yaramo_route)
+        if route not in self.active_routes:
+            raise Exception(f"Route from {yaramo_route.start_signal.name} to "
+                            f"{yaramo_route.end_signal.name} was not set.")
+        if route.used_by != train_id:
+            raise Exception(f"Wrong Train ID: The route from {yaramo_route.start_signal.name} to "
+                            f"{yaramo_route.end_signal.name} was not set with the train id "
+                            f"{train_id}.")
         self.track_controller.free_route(route, train_id)
         self.signal_controller.free_route(route, train_id)
         self.active_routes.remove(route)
+        route.used_by = None
+        if self.interlocking_logic_monitor is not None:
+            self.interlocking_logic_monitor.monitor_free_route(yaramo_route)
 
     async def reset_route(self, yaramo_route, train_id: str):
-        route = self.get_route_from_yaramo_route(yaramo_route)
+        route: Route = self.get_route_from_yaramo_route(yaramo_route)
+        if route not in self.active_routes:
+            raise Exception(f"Route from {yaramo_route.start_signal.name} to "
+                            f"{yaramo_route.end_signal.name} was not set.")
+        if route.used_by != train_id:
+            raise Exception(f"Wrong Train ID: The route from {yaramo_route.start_signal.name} to "
+                            f"{yaramo_route.end_signal.name} was not set with the train id "
+                            f"{train_id}.")
         self.point_controller.reset_route(route, train_id)
         self.track_controller.reset_route(route, train_id)
         self.train_detection_controller.reset_track_segments_of_route(route)
         await self.signal_controller.reset_route(route, train_id)
         self.active_routes.remove(route)
+        route.used_by = None
+        if self.interlocking_logic_monitor is not None:
+            self.interlocking_logic_monitor.monitor_reset_route(yaramo_route)
 
     def get_route_from_yaramo_route(self, yaramo_route):
         for route in self.routes:
             if route.yaramo_route.uuid == yaramo_route.uuid:
                 return route
         return None
+
+    def _is_route_valid_consecutive_route(self, new_route: YaramoRoute, train_id: str):
+        all_routes_of_train = list(filter(lambda active_route: active_route.used_by == train_id, self.active_routes))
+        if len(all_routes_of_train) == 0:
+            # New train, per definition consecutive route
+            return True
+
+        # Find route with no successor
+        last_route = None
+        for route in all_routes_of_train:
+            # All other routes
+            found_successor = False
+            for other_route in all_routes_of_train:
+                if route.id != other_route.id:
+                    if route.end_signal.yaramo_signal.name == other_route.start_signal.yaramo_signal.name:
+                        found_successor = True
+            if not found_successor:
+                if last_route is not None:
+                    raise ValueError("Multiple last routes found")
+                last_route = route
+        return last_route.end_signal.yaramo_signal.name == new_route.start_signal.name and \
+            last_route.start_signal.yaramo_signal.name != new_route.end_signal.name

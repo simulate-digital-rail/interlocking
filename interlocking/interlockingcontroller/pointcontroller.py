@@ -1,4 +1,4 @@
-from interlocking.model import OccupancyState
+from interlocking.model import OccupancyState, Point
 from interlocking.model.helper import Settings
 from interlocking.infrastructureprovider import InfrastructureProvider
 from .flankprotectioncontroller import FlankProtectionController
@@ -11,7 +11,7 @@ class PointController(object):
 
     def __init__(self, signal_controller: SignalController, infrastructure_providers: list[InfrastructureProvider],
                  settings: Settings):
-        self.points = None
+        self.points: dict[str, Point] = {}
         self.infrastructure_providers = infrastructure_providers
         self.settings = settings
         self.flank_protection_controller = FlankProtectionController(self, signal_controller)
@@ -61,11 +61,11 @@ class PointController(object):
         # tasks = []
         results = []
         for infrastructure_provider in self.infrastructure_providers:
-            results.append(await infrastructure_provider.turn_point(point.yaramo_node, orientation))
+            results.append(await infrastructure_provider.call_turn_point(point.yaramo_node, orientation))
 
         # async with asyncio.TaskGroup() as tg:
         #    for infrastructure_provider in self.infrastructure_providers:
-        #        tasks.append(tg.create_task(infrastructure_provider.turn_point(point.yaramo_node, orientation)))
+        #        tasks.append(tg.create_task(infrastructure_provider.call_turn_point(point.yaramo_node, orientation)))
         # if all(list(map(lambda task: task.result(), tasks))):
         if all(results):
             point.orientation = orientation
