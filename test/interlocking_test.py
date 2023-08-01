@@ -11,17 +11,19 @@ def test_reset():
     interlocking = interlockinghelper.get_interlocking(topology)
     route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
     asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
+
+    interlocking.print_state()
     route_2 = topologyhelper.get_route_by_signal_names(topology, "60ES2", "60AS3")
     asyncio.run(interlockinghelper.set_route(interlocking, route_2, True, "RB102"))
 
     interlockinghelper.test_track(interlocking, "94742-0", "RB101", OccupancyState.RESERVED)
     interlockinghelper.test_track(interlocking, "b8e69-3", "RB101", OccupancyState.RESERVED_OVERLAP)
     interlockinghelper.test_track(interlocking, "a8f44-0", "RB101", OccupancyState.FREE)
-    interlockinghelper.test_signal(interlocking, "60BS1", "go")
+    interlockinghelper.test_signal(interlocking, "60BS1", "RB101", "go", OccupancyState.RESERVED)
     interlockinghelper.test_point(interlocking, "d43f9", "RB101", "left", OccupancyState.RESERVED)
 
     interlockinghelper.test_track(interlocking, "3a70a-0", "RB102", OccupancyState.RESERVED)
-    interlockinghelper.test_signal(interlocking, "60ES2", "go")
+    interlockinghelper.test_signal(interlocking, "60ES2", "RB102", "go", OccupancyState.RESERVED)
     interlockinghelper.test_point(interlocking, "fd73d", "RB102", "right", OccupancyState.RESERVED)
 
     assert len(interlocking.active_routes) == 2
@@ -31,11 +33,11 @@ def test_reset():
     interlockinghelper.test_track(interlocking, "94742-0", "RB101", OccupancyState.FREE)
     interlockinghelper.test_track(interlocking, "b8e69-3", "RB101", OccupancyState.FREE)
     interlockinghelper.test_track(interlocking, "a8f44-0", "RB101", OccupancyState.FREE)
-    interlockinghelper.test_signal(interlocking, "60BS1", "halt")
+    interlockinghelper.test_signal(interlocking, "60BS1", "RB101", "halt", OccupancyState.FREE)
     interlockinghelper.test_point(interlocking, "d43f9", "RB101", "undefined", OccupancyState.FREE)
 
     interlockinghelper.test_track(interlocking, "3a70a-0", "RB102", OccupancyState.FREE)
-    interlockinghelper.test_signal(interlocking, "60ES2", "halt")
+    interlockinghelper.test_signal(interlocking, "60ES2", "RB102", "halt", OccupancyState.FREE)
     interlockinghelper.test_point(interlocking, "fd73d", "RB102", "undefined", OccupancyState.FREE)
 
     assert len(interlocking.active_routes) == 0
@@ -64,7 +66,7 @@ def test_driving():
     interlockinghelper.test_track(interlocking, "b8e69-2", "RB101", OccupancyState.RESERVED_OVERLAP)
     interlockinghelper.test_track(interlocking, "b8e69-3", "RB101", OccupancyState.RESERVED_OVERLAP)
     interlockinghelper.test_track(interlocking, "a8f44-0", "RB101", OccupancyState.FREE)
-    interlockinghelper.test_signal(interlocking, "60BS1", "go")
+    interlockinghelper.test_signal(interlocking, "60BS1", "RB101", "go", OccupancyState.RESERVED)
 
     route_2 = topologyhelper.get_route_by_signal_names(topology, "60BS2", "60BS3")
     asyncio.run(interlockinghelper.set_route(interlocking, route_2, True, "RB101"))
@@ -77,7 +79,7 @@ def test_driving():
     # "Drive" some train
     ip = interlocking.infrastructure_providers[0]
     asyncio.run(ip.tds_count_in("de139-1", "RB101"))
-    interlockinghelper.test_signal(interlocking, "60BS1", "halt")
+    interlockinghelper.test_signal(interlocking, "60BS1", "RB101", "halt", OccupancyState.RESERVED)
     asyncio.run(ip.tds_count_in("de139-2", "RB101"))
     asyncio.run(ip.tds_count_out("de139-1", "RB101"))
     asyncio.run(ip.tds_count_in("94742-0", "RB101"))
@@ -110,7 +112,7 @@ def test_reset_route():
     interlockinghelper.test_track(interlocking, "94742-0", "RB101", OccupancyState.RESERVED)
     interlockinghelper.test_track(interlocking, "b8e69-3", "RB101", OccupancyState.RESERVED_OVERLAP)
     interlockinghelper.test_track(interlocking, "a8f44-0", "RB101", OccupancyState.FREE)
-    interlockinghelper.test_signal(interlocking, "60BS1", "go")
+    interlockinghelper.test_signal(interlocking, "60BS1", "RB101", "go", OccupancyState.RESERVED)
     interlockinghelper.test_point(interlocking, "d43f9", "RB101", "left", OccupancyState.RESERVED)
 
     asyncio.run(interlocking.reset_route(route_1, "RB101"))
@@ -118,7 +120,7 @@ def test_reset_route():
     interlockinghelper.test_track(interlocking, "94742-0", "RB101", OccupancyState.FREE)
     interlockinghelper.test_track(interlocking, "b8e69-3", "RB101", OccupancyState.FREE)
     interlockinghelper.test_track(interlocking, "a8f44-0", "RB101", OccupancyState.FREE)
-    interlockinghelper.test_signal(interlocking, "60BS1", "halt")
+    interlockinghelper.test_signal(interlocking, "60BS1", "RB101", "halt", OccupancyState.FREE)
     interlockinghelper.test_point(interlocking, "d43f9", "RB101", "left", OccupancyState.FREE)
 
 

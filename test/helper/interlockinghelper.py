@@ -47,12 +47,17 @@ def test_point(interlocking: Interlocking, point_id: str, train_id: str, orienta
     assert point.orientation == orientation
 
 
-def test_signal(interlocking: Interlocking, signal_id: str, state: str):
+def test_signal(interlocking: Interlocking, signal_id: str, train_id: str, signal_aspect: str, state: OccupancyState):
     signal: Signal or None = None
     for _signal in interlocking.signal_controller.signals.values():
         if _signal.yaramo_signal.name == signal_id:
             signal = _signal
     assert signal.state == state
+    assert signal.signal_aspect == signal_aspect
+    if state == OccupancyState.FREE:
+        assert train_id not in signal.used_by
+    else:
+        assert train_id in signal.used_by
 
 
 def test_track(interlocking: Interlocking, segment_id: str, train_id: str, state: OccupancyState):
