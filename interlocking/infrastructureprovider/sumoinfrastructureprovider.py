@@ -4,8 +4,8 @@ from yaramo.model import SignalDirection
 
 class SUMOInfrastructureProvider(InfrastructureProvider):
 
-    def __init__(self, traci_instance):
-        super().__init__()
+    def __init__(self, traci_instance, **kwargs):
+        super().__init__(**kwargs)
         self.traci_instance = traci_instance
 
     async def set_signal_state(self, yaramo_signal, target_state):
