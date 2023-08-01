@@ -1,6 +1,6 @@
 from planpro_importer.reader import PlanProReader
 from railwayroutegenerator.routegenerator import RouteGenerator
-from yaramo.model import Topology
+from yaramo.model import Topology, Signal, Node
 
 
 def get_topology_from_planpro_file(file_name: str):
@@ -28,3 +28,17 @@ def get_route_by_signal_names(topology: Topology, start_signal_name: str, end_si
         route = topology.routes[route_uuid]
         if route.start_signal.name == start_signal_name and route.end_signal.name == end_signal_name:
             return route
+
+
+def get_signal_by_name(topology: Topology, signal_name: str) -> Signal | None:
+    for signal in list(topology.signals.values()):
+        if signal.name == signal_name:
+            return signal
+    return None
+
+
+def get_point_by_name(topology: Topology, point_name: str) -> Node | None:
+    for point in list(topology.nodes.values()):
+        if point.uuid[-5:] == point_name:
+            return point
+    return None

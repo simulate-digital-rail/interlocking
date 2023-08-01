@@ -1,4 +1,5 @@
 from interlocking.interlockingcontroller import PointController, SignalController, TrackController, TrainDetectionController
+from interlocking.infrastructureprovider import InfrastructureProvider
 from interlocking.model import Point, Track, Signal, Route
 from interlocking.model.helper import SetRouteResult, Settings, InterlockingOperationType
 from interlockinglogicmonitor import InterlockingLogicMonitor
@@ -42,6 +43,12 @@ class Interlocking(object):
             signal = Signal(yaramo_signal)
             signals[yaramo_signal.uuid] = signal
         self.signal_controller.signals = signals
+
+        new_ip = InfrastructureProvider.verify_all_elements_covered_by_infrastructure_provider(yaramo_topoloy,
+                                                                                               self.infrastructure_providers,
+                                                                                               self.settings)
+        if new_ip is not None:
+            self.infrastructure_providers.append(new_ip)
 
         # Tracks
         tracks = dict()

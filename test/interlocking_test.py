@@ -271,6 +271,7 @@ class TestResetRouteExceptions(unittest.TestCase):
                                                    f"{some_route.end_signal.name} was not set with the train id "
                                                    f"{other_train_id}.")
 
+
 # if __name__ == "__main__":
     # logging.basicConfig(level=logging.DEBUG)
     # test_driving()
