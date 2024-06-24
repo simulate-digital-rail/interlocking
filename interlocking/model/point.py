@@ -48,7 +48,14 @@ class Point(object):
         return len(self.used_by) == 1 and train_id in self.used_by
 
     def is_track_connected(self, track):
-        return track.base_track_id in {self.head.base_track_id, self.left.base_track_id, self.right.base_track_id}
+        all_base_ids = []
+        if self.head is not None:
+            all_base_ids.append(self.head.base_track_id)
+        if self.left is not None:
+            all_base_ids.append(self.left.base_track_id)
+        if self.right is not None:
+            all_base_ids.append(self.right.base_track_id)
+        return track.base_track_id in all_base_ids
 
     def does_point_connect_tracks(self, track_1, track_2):
         if not self.is_point:
