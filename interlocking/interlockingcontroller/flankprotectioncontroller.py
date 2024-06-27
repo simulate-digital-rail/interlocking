@@ -18,7 +18,7 @@ class FlankProtectionController(object):
 
     async def add_flank_protection_for_point(self, point: Point, point_orientation: str,
                                              route: Route, train_id: str) -> bool:
-        signals, points = self._get_flank_protection_elements_of_point(point, point_orientation, route)
+        signals, points = self._get_flank_protection_elements_of_point(point, point_orientation)
         results = []
         for signal in signals:
             #signal.state = OccupancyState.FLANK_PROTECTION
@@ -44,8 +44,8 @@ class FlankProtectionController(object):
                 point.is_used_for_flank_protection = True
         return all(results)
 
-    def free_flank_protection_of_point(self, point: Point, point_orientation: str, route: Route, train_id: str):
-        signals, points = self._get_flank_protection_elements_of_point(point, point_orientation, route)
+    def free_flank_protection_of_point(self, point: Point, point_orientation: str):
+        signals, points = self._get_flank_protection_elements_of_point(point, point_orientation)
         for signal in signals:
             signal.is_used_for_flank_protection = False
         for point in points:
@@ -53,8 +53,7 @@ class FlankProtectionController(object):
 
     def _get_flank_protection_elements_of_point(self,
                                                 point: Point,
-                                                point_orientation: str | None,
-                                                route: Route) -> tuple[list[Signal],
+                                                point_orientation: str | None) -> tuple[list[Signal],
                                                                        dict[Point, tuple[OccupancyState, str | None]]]:
         flank_protection_tracks = []
         if point_orientation is None:
@@ -102,7 +101,7 @@ class FlankProtectionController(object):
                     connection_direction = other_point.get_connection_direction_of_track(flank_protection_track)
                     if connection_direction == NodeConnectionDirection.Spitze:
                         point_results[other_point] = (OccupancyState.FLANK_PROTECTION_TRANSPORT, None)
-                        signal_results, sub_point_results = self._get_flank_protection_elements_of_point(other_point, None, route)
+                        signal_results, sub_point_results = self._get_flank_protection_elements_of_point(other_point, None)
                         point_results = point_results | sub_point_results
                     elif connection_direction == NodeConnectionDirection.Links:
                         point_results[other_point] = (OccupancyState.FLANK_PROTECTION, "right")

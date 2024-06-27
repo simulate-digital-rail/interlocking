@@ -89,6 +89,7 @@ class PointController(object):
             logging.info(f"--- Set point {point.point_id} to free")
             point.state = OccupancyState.FREE
             point.used_by.remove(train_id)
+            self.flank_protection_cqontroller.free_flank_protection_of_point(point, point.orientation)
 
     def reset_route(self, route, train_id: str):
         for point in route.get_points_of_route():

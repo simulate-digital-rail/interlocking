@@ -102,6 +102,16 @@ def test_driving():
     asyncio.run(ip.tds_count_out("a8f44-0", "RB101"))
     interlockinghelper.free_route(interlocking, route_2, "RB101")
 
+    # Verify flank protection cleanup
+    signal_as1 = interlockinghelper.get_interlocking_signal_by_name(interlocking, "60AS1")
+    assert not signal_as1.is_used_for_flank_protection
+    signal_as4 = interlockinghelper.get_interlocking_signal_by_name(interlocking, "60AS1")
+    assert not signal_as4.is_used_for_flank_protection
+    point_fa9 = interlockinghelper.get_interlocking_point_by_id(interlocking, "fa9ea")
+    assert not point_fa9.is_used_for_flank_protection
+    point_21b = interlockinghelper.get_interlocking_point_by_id(interlocking, "21b88")
+    assert not point_21b.is_used_for_flank_protection
+
 
 def test_reset_route():
     topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
