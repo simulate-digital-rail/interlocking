@@ -14,6 +14,7 @@ def test_reset():
 
     interlocking.print_state()
     route_2 = topologyhelper.get_route_by_signal_names(topology, "60ES2", "60AS3")
+    route_2.maximum_speed = 30  # Remove overlap from this route through the station
     asyncio.run(interlockinghelper.set_route(interlocking, route_2, True, "RB102"))
 
     interlockinghelper.test_track(interlocking, "94742-0", "RB101", OccupancyState.RESERVED)
