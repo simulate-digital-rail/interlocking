@@ -2,6 +2,7 @@
 # Example 2: Schutzweiche
 # Example 3: Schutztransportweiche mit Schutzweiche und halt zeigendem Signal
 # Example 4: Two routes, that do not conflict, but each point is also flank protection of the other route
+# Example 5: Prevent overlap in flank protection area and flank protection for overlaps
 
 from .helper import topologyhelper, interlockinghelper
 from interlocking.interlockinginterface import Interlocking
@@ -139,10 +140,32 @@ def test_example_4():
     interlocking.print_state()
 
 
+def test_flank_protection_for_overlap():
+    topology = topologyhelper.get_topology_from_planpro_file("./flank-protection-example5.ppxml")
+    track_operations_ip = TrackOperationsInfrastructureProvider()
+    infrastructure_provider = [LoggingInfrastructureProvider(), track_operations_ip]
+
+    interlocking = Interlocking(infrastructure_provider, Settings(max_number_of_points_at_same_time=3))
+    interlocking.prepare(topology)
+
+    route = topologyhelper.get_route_by_signal_names(topology, "60BS4", "60BS5")
+    asyncio.run(interlockinghelper.set_route(interlocking, route, True, "RB101"))
+
+    interlocking.print_state()
+    signal_bs2 = interlockinghelper.get_interlocking_signal_by_name(interlocking, "60BS2")
+    signal_bs7 = interlockinghelper.get_interlocking_signal_by_name(interlocking, "60BS7")
+    segment_towards_bs2 = interlockinghelper.get_interlocking_track_by_id(interlocking, "b2ad2-0")
+    segment_towards_bs7 = interlockinghelper.get_interlocking_track_by_id(interlocking, "32987-0")
+    assert ((signal_bs2.is_used_for_flank_protection and segment_towards_bs7.state == OccupancyState.RESERVED_OVERLAP)
+            or
+            (signal_bs7.is_used_for_flank_protection and segment_towards_bs2.state == OccupancyState.RESERVED_OVERLAP))
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     test_example_1()
     test_example_2()
     test_example_3()
     test_example_4()
+    test_flank_protection_for_overlap()
 
