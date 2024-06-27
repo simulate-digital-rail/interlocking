@@ -1,6 +1,6 @@
 from planpro_importer.reader import PlanProReader
 from railwayroutegenerator.routegenerator import RouteGenerator
-from yaramo.model import Topology, Signal, Node
+from yaramo.model import Topology, Route, Signal, Node
 
 
 def get_topology_from_planpro_file(file_name: str):

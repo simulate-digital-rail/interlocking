@@ -36,6 +36,14 @@ def get_interlocking_point_by_id(interlocking: Interlocking, point_id: str):
         if _point_id == point_id:
             return interlocking.point_controller.points[point_id]
 
+def get_interlocking_track_by_id(interlocking: Interlocking, segment_id: str):
+    for track_id in interlocking.track_controller.tracks:
+        track: Track = interlocking.track_controller.tracks[track_id]
+        for _segment in track.segments:
+            if _segment.segment_id == segment_id:
+                return _segment
+    return None
+
 
 def test_point(interlocking: Interlocking, point_id: str, train_id: str, orientation: str, state: OccupancyState):
     point = interlocking.point_controller.points[point_id]
@@ -47,22 +55,22 @@ def test_point(interlocking: Interlocking, point_id: str, train_id: str, orienta
     assert point.orientation == orientation
 
 
-def test_signal(interlocking: Interlocking, signal_id: str, state: str):
+def test_signal(interlocking: Interlocking, signal_id: str, train_id: str, signal_aspect: str, state: OccupancyState):
     signal: Signal or None = None
     for _signal in interlocking.signal_controller.signals.values():
         if _signal.yaramo_signal.name == signal_id:
             signal = _signal
     assert signal.state == state
+    assert signal.signal_aspect == signal_aspect
+    if state == OccupancyState.FREE:
+        assert train_id not in signal.used_by
+    else:
+        assert train_id in signal.used_by
 
 
 def test_track(interlocking: Interlocking, segment_id: str, train_id: str, state: OccupancyState):
-    segment: TrackSegment | None = None
-    for track_id in interlocking.track_controller.tracks:
-        track: Track = interlocking.track_controller.tracks[track_id]
-        for _segment in track.segments:
-            if _segment.segment_id == segment_id:
-                segment = _segment
-                break
+    segment: TrackSegment | None = get_interlocking_track_by_id(interlocking, segment_id)
+    assert segment is not None
     assert segment.state == state
     if state == OccupancyState.FREE:
         assert train_id not in segment.used_by

@@ -1,10 +1,10 @@
-from yaramo.model import SignalDirection
+from yaramo.model import SignalDirection, Edge
 from .tracksegment import TrackSegment
 
 
 class Track(object):
 
-    def __init__(self, yaramo_edge):
+    def __init__(self, yaramo_edge: Edge):
         self.yaramo_edge = yaramo_edge
         self.base_track_id = yaramo_edge.uuid[-5:]
         self.signals = []
