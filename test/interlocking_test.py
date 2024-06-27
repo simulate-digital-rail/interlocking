@@ -258,6 +258,21 @@ def test_consecutive_routes():
     route_3 = topologyhelper.get_route_by_signal_names(topology, "60AS1", "60BS3")
     asyncio.run(interlockinghelper.set_route(interlocking, route_3, True, "RB101"))
 
+    asyncio.run(interlocking.reset())
+
+    # Increase speed to add overlap
+    for route in interlocking.routes:
+        route.yaramo_route.maximum_speed = 50
+
+    # Test three in a row consecutive routes, everything fine
+    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60ES1")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
+    route_2 = topologyhelper.get_route_by_signal_names(topology, "60ES1", "60AS2")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_2, True, "RB101"))
+    route_3 = topologyhelper.get_route_by_signal_names(topology, "60AS2", "60BS3")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_3, True, "RB101"))
+
+
 
 class TestConsecutiveRouteDetectionWithTwoLastTracks(unittest.TestCase):
 
