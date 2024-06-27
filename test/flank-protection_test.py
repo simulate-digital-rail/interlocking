@@ -1,6 +1,6 @@
 # Example 1: Halt zeigendes Signal
 # Example 2: Schutzweiche
-# Example 3: Schutztransportweiche mit Schutzweise und halt zeigendem Signal
+# Example 3: Schutztransportweiche mit Schutzweiche und halt zeigendem Signal
 # Example 4: Two routes, that do not conflict, but each point is also flank protection of the other route
 
 from .helper import topologyhelper, interlockinghelper
@@ -54,8 +54,9 @@ def test_example_1():
     flank_protection_signal = interlockinghelper.get_interlocking_signal_by_name(interlocking, "99N3")
     assert flank_protection_signal.signal_aspect == "halt"
     assert track_operations_ip.was_signal_set_to_aspect(flank_protection_signal.yaramo_signal, "halt")
-    assert flank_protection_signal.state == OccupancyState.FLANK_PROTECTION
-    assert "RB101" in flank_protection_signal.used_by
+    # assert flank_protection_signal.state == OccupancyState.FLANK_PROTECTION
+    assert flank_protection_signal.is_used_for_flank_protection
+    # assert "RB101" in flank_protection_signal.used_by
 
 
 def test_example_2():
@@ -79,8 +80,9 @@ def test_example_2():
     flank_protection_point_id = "aed72"
     flank_protection_point = interlocking.point_controller.points[flank_protection_point_id]
     assert flank_protection_point.orientation == "left"
-    assert flank_protection_point.state == OccupancyState.FLANK_PROTECTION
-    assert "RB101" in flank_protection_point.used_by
+    # assert flank_protection_point.state == OccupancyState.FLANK_PROTECTION
+    assert flank_protection_point.is_used_for_flank_protection
+    # assert "RB101" in flank_protection_point.used_by
 
 
 def test_example_3():
@@ -103,20 +105,23 @@ def test_example_3():
 
     flank_protection_transport_point_id = "8fc1f"  # n3
     flank_protection_transport_point = interlocking.point_controller.points[flank_protection_transport_point_id]
-    assert flank_protection_transport_point.state == OccupancyState.FLANK_PROTECTION_TRANSPORT
-    assert "RB101" in flank_protection_transport_point.used_by
+    # assert flank_protection_transport_point.state == OccupancyState.FLANK_PROTECTION_TRANSPORT
+    assert flank_protection_transport_point.is_used_for_flank_protection
+    # assert "RB101" in flank_protection_transport_point.used_by
 
     flank_protection_point_id = "da301"  # n6
     flank_protection_point = interlocking.point_controller.points[flank_protection_point_id]
     assert point.orientation == "right"
-    assert flank_protection_point.state == OccupancyState.FLANK_PROTECTION
-    assert "RB101" in flank_protection_point.used_by
+    # assert flank_protection_point.state == OccupancyState.FLANK_PROTECTION
+    assert flank_protection_point.is_used_for_flank_protection
+    # assert "RB101" in flank_protection_point.used_by
 
     flank_protection_signal = interlockinghelper.get_interlocking_signal_by_name(interlocking, "60E2")
     assert flank_protection_signal.signal_aspect == "halt"
     assert track_operations_ip.was_signal_set_to_aspect(flank_protection_signal.yaramo_signal, "halt")
-    assert flank_protection_signal.state == OccupancyState.FLANK_PROTECTION
-    assert "RB101" in flank_protection_signal.used_by
+    # assert flank_protection_signal.state == OccupancyState.FLANK_PROTECTION
+    assert flank_protection_signal.is_used_for_flank_protection
+    # assert "RB101" in flank_protection_signal.used_by
 
 
 def test_example_4():

@@ -18,24 +18,34 @@ class FlankProtectionController(object):
         signals, points = self._get_flank_protection_elements_of_point(point, point_orientation, route)
         results = []
         for signal in signals:
-            signal.state = OccupancyState.FLANK_PROTECTION
-            signal.used_by.add(train_id)
-            results.append(await self.signal_controller.set_signal_halt(signal))
+            #signal.state = OccupancyState.FLANK_PROTECTION
+            #signal.used_by.add(train_id)
+            change_successful = await self.signal_controller.set_signal_halt(signal)
+            results.append(change_successful)
+            if change_successful:
+                signal.is_used_for_flank_protection = True
         for point in points:
             occupancy_state, orientation = points[point]
-            point.state = occupancy_state
-            point.used_by.add(train_id)
+            #point.state = occupancy_state
+            #point.used_by.add(train_id)
             if orientation is not None:
                 # In case of a Schutztansportweiche the orientation is not relevant (None).
-                results.append(await self.point_controller.turn_point(point, orientation))
+                change_successful = await self.point_controller.turn_point(point, orientation)
+                results.append(change_successful)
+                if change_successful:
+                    point.is_used_for_flank_protection = True
+            else:
+                point.is_used_for_flank_protection = True
         return all(results)
 
     def free_flank_protection_of_point(self, point: Point, point_orientation: str, route: Route, train_id: str):
         signals, points = self._get_flank_protection_elements_of_point(point, point_orientation, route)
         for signal in signals:
-            self.signal_controller.free_signal(signal, train_id)
+            #self.signal_controller.free_signal(signal, train_id)
+            signal.is_used_for_flank_protection = False
         for point in points:
-            self.point_controller.set_point_free(point, train_id)
+            #self.point_controller.set_point_free(point, train_id)
+            point.is_used_for_flank_protection = False
 
     def _get_flank_protection_elements_of_point(self,
                                                 point: Point,

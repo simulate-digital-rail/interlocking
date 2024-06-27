@@ -57,6 +57,10 @@ class PointController(object):
         if point.orientation == orientation:
             # Everything is fine
             return True
+        if point.is_used_for_flank_protection is True:
+            logging.error(f"Can not turn point of point {point.point_id} to {orientation}, "
+                          f"since it is used for flank protection.")
+            return False
         logging.info(f"--- Move point {point.point_id} to {orientation}")
         # tasks = []
         results = []

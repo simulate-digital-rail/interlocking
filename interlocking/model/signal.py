@@ -11,4 +11,5 @@ class Signal(object):
         self.signal_aspect: str = "undefined"  # Either halt or go
         self.state: OccupancyState = OccupancyState.FREE
         self.used_by = set()  # If point is reserved, occupied or part of an overlap, this contains the train numbers.
+        self.is_used_for_flank_protection = False
         self.track: Track or None = None

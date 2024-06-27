@@ -31,6 +31,10 @@ class SignalController(object):
         if signal.signal_aspect == signal_aspect:
             # Everything is fine
             return True
+        if signal.is_used_for_flank_protection is True:
+            logging.error(f"Can not set signal aspect of signal {signal.yaramo_signal.name} to {signal_aspect}, "
+                          f"since it is used for flank protection.")
+            return False
         logging.info(f"--- Set signal {signal.yaramo_signal.name} to {signal_aspect}")
 
         results = []

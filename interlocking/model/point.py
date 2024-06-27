@@ -11,6 +11,7 @@ class Point(object):
         self.orientation = "undefined"  # either left, right or undefined
         self.state = OccupancyState.FREE
         self.used_by = set()  # If point is reserved, occupied or part of an overlap, this contains the train numbers.
+        self.is_used_for_flank_protection = False
         self.head = None
         self.left = None
         self.right = None
