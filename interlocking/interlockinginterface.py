@@ -113,10 +113,12 @@ class Interlocking(object):
             next_op = await operations_queue.get()
 
     async def reset(self):
+        logging.debug("Reset Interlocking")
         self.point_controller.reset()
         self.track_controller.reset()
         await self.signal_controller.reset()
         self.active_routes = []
+        logging.debug("Reset completed")
 
     def print_state(self):
         logging.debug("##############")

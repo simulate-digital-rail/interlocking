@@ -21,6 +21,7 @@ class PointController(object):
             self.points[point_id].orientation = "undefined"
             self.points[point_id].state = OccupancyState.FREE
             self.points[point_id].used_by = set()
+        self.flank_protection_controller.reset()
 
     async def set_route(self, route, train_id: str):
         tasks = []
@@ -97,4 +98,5 @@ class PointController(object):
         logging.debug("State of Points:")
         for point_id in self.points:
             point = self.points[point_id]
-            logging.debug(f"{point.point_id}: {point.state} (Orientation: {point.orientation}) (used by: {point.used_by})")
+            logging.debug(f"{point.point_id}: {point.state} (Orientation: {point.orientation}) "
+                          f"(used by: {point.used_by}) (is used for FP: {point.is_used_for_flank_protection})")

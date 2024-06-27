@@ -73,4 +73,5 @@ class SignalController(object):
         logging.debug("State of Signals:")
         for signal_uuid in self.signals:
             signal = self.signals[signal_uuid]
-            logging.debug(f"{signal.yaramo_signal.name}: {signal.state} (Signal Aspect: {signal.signal_aspect})")
+            logging.debug(f"{signal.yaramo_signal.name}: {signal.state} (Signal Aspect: {signal.signal_aspect}) "
+                          f"(is used for FP: {signal.is_used_for_flank_protection})")

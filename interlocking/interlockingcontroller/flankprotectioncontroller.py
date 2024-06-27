@@ -1,6 +1,7 @@
 from .signalcontroller import SignalController
 from interlocking.model import Route, Point, OccupancyState, Signal
 from yaramo.model import SignalDirection, NodeConnectionDirection
+import logging
 
 
 class FlankProtectionController(object):
@@ -10,8 +11,10 @@ class FlankProtectionController(object):
         self.signal_controller = signal_controller
 
     def reset(self):
-        # Do nothing, all will be done in the point and signal controller
-        pass
+        for point in self.point_controller.points.values():
+            point.is_used_for_flank_protection = False
+        for signal in self.signal_controller.signals.values():
+            signal.is_used_for_flank_protection = False
 
     async def add_flank_protection_for_point(self, point: Point, point_orientation: str,
                                              route: Route, train_id: str) -> bool:
@@ -20,6 +23,7 @@ class FlankProtectionController(object):
         for signal in signals:
             #signal.state = OccupancyState.FLANK_PROTECTION
             #signal.used_by.add(train_id)
+            logging.info(f"--- Use signal {signal.yaramo_signal.name} for flank protection as 'halt-zeigendes Signal'")
             change_successful = await self.signal_controller.set_signal_halt(signal)
             results.append(change_successful)
             if change_successful:
@@ -30,21 +34,21 @@ class FlankProtectionController(object):
             #point.used_by.add(train_id)
             if orientation is not None:
                 # In case of a Schutztansportweiche the orientation is not relevant (None).
+                logging.info(f"--- Use point {point.point_id} for flank protection as 'Schutzweiche'")
                 change_successful = await self.point_controller.turn_point(point, orientation)
                 results.append(change_successful)
                 if change_successful:
                     point.is_used_for_flank_protection = True
             else:
+                logging.info(f"--- Use point {point.point_id} for flank protection as 'Schutztransportweiche'")
                 point.is_used_for_flank_protection = True
         return all(results)
 
     def free_flank_protection_of_point(self, point: Point, point_orientation: str, route: Route, train_id: str):
         signals, points = self._get_flank_protection_elements_of_point(point, point_orientation, route)
         for signal in signals:
-            #self.signal_controller.free_signal(signal, train_id)
             signal.is_used_for_flank_protection = False
         for point in points:
-            #self.point_controller.set_point_free(point, train_id)
             point.is_used_for_flank_protection = False
 
     def _get_flank_protection_elements_of_point(self,
