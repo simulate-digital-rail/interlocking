@@ -11,8 +11,11 @@ class SignalController(object):
 
     async def reset(self):
         # Run non-concurrently
-        for signal_id in self.signals:
-            await self.set_signal_halt(self.signals[signal_id])
+        for signal in self.signals.values():
+            await self.set_signal_halt(signal)
+            signal.state = OccupancyState.FREE
+            signal.used_by = set()
+
 
     async def set_route(self, route, train_id: str):
         result = await self.set_signal_go(route.start_signal)
