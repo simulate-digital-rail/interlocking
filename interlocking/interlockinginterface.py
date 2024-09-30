@@ -173,6 +173,19 @@ class Interlocking(object):
         return can_be_set
 
     def is_route_set(self, yaramo_route, train_id: str) -> IsRouteSetResult:
+        route: Route = self.get_route_from_yaramo_route(yaramo_route)
+        if route not in self.active_routes:
+            return IsRouteSetResult.ROUTE_NOT_SET
+        if route.used_by != train_id:
+            return IsRouteSetResult.ROUTE_SET_FOR_WRONG_TRAIN
+
+        if not self.point_controller.is_route_set(route, train_id):
+            return IsRouteSetResult.ROUTE_NOT_SET_CORRECTLY
+        if not self.signal_controller.is_route_set(route, train_id):
+            return IsRouteSetResult.ROUTE_NOT_SET_CORRECTLY
+        if not self.track_controller.is_route_set(route, train_id):
+            return IsRouteSetResult.ROUTE_NOT_SET_CORRECTLY
+
         return IsRouteSetResult.ROUTE_SET_CORRECTLY
 
     def do_two_routes_collide(self, yaramo_route_1, yaramo_route_2):
