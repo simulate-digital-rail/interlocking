@@ -21,17 +21,13 @@ class FlankProtectionController(object):
         signals, points = self._get_flank_protection_elements_of_point(point, point_orientation)
         results = []
         for signal in signals:
-            #signal.state = OccupancyState.FLANK_PROTECTION
-            #signal.used_by.add(train_id)
             logging.info(f"--- Use signal {signal.yaramo_signal.name} for flank protection as 'halt-zeigendes Signal'")
             change_successful = await self.signal_controller.set_signal_halt(signal)
             results.append(change_successful)
             if change_successful:
                 signal.is_used_for_flank_protection = True
         for point in points:
-            occupancy_state, orientation = points[point]
-            #point.state = occupancy_state
-            #point.used_by.add(train_id)
+            orientation = points[point]
             if orientation is not None:
                 # In case of a Schutztansportweiche the orientation is not relevant (None).
                 logging.info(f"--- Use point {point.point_id} for flank protection as 'Schutzweiche'")
@@ -54,7 +50,7 @@ class FlankProtectionController(object):
     def _get_flank_protection_elements_of_point(self,
                                                 point: Point,
                                                 point_orientation: str | None) -> tuple[list[Signal],
-                                                                       dict[Point, tuple[OccupancyState, str | None]]]:
+                                                                       dict[Point, str | None]]:
         flank_protection_tracks = []
         if point_orientation is None:
             # It's only none, iff there is a flank protection transport point (where the flank
@@ -66,7 +62,7 @@ class FlankProtectionController(object):
             flank_protection_tracks = [point.left]
 
         signal_results: list[Signal] = []
-        point_results: dict[Point, tuple[OccupancyState, str | None]] = {}
+        point_results: dict[Point, str | None] = {}
 
         for flank_protection_track in flank_protection_tracks:
             # Search for signals
@@ -100,11 +96,11 @@ class FlankProtectionController(object):
                 if other_point is not None and other_point.is_point:
                     connection_direction = other_point.get_connection_direction_of_track(flank_protection_track)
                     if connection_direction == NodeConnectionDirection.Spitze:
-                        point_results[other_point] = (OccupancyState.FLANK_PROTECTION_TRANSPORT, None)
+                        point_results[other_point] = None
                         signal_results, sub_point_results = self._get_flank_protection_elements_of_point(other_point, None)
                         point_results = point_results | sub_point_results
                     elif connection_direction == NodeConnectionDirection.Links:
-                        point_results[other_point] = (OccupancyState.FLANK_PROTECTION, "right")
+                        point_results[other_point] = "right"
                     elif connection_direction == NodeConnectionDirection.Rechts:
-                        point_results[other_point] = (OccupancyState.FLANK_PROTECTION, "left")
+                        point_results[other_point] = "left"
         return signal_results, point_results
