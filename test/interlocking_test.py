@@ -1,5 +1,6 @@
 from .helper import topologyhelper, interlockinghelper
 from interlocking.model import OccupancyState
+from interlocking.model.helper import IsRouteSetResult
 from interlocking.infrastructureprovider import RandomWaitInfrastructureProvider
 from yaramo.model import Route as YaramoRoute, Signal as YaramoSignal, Edge as YaramoEdge, Node as YaramoNode
 import asyncio
@@ -112,6 +113,23 @@ def test_driving():
     point_21b = interlockinghelper.get_interlocking_point_by_id(interlocking, "21b88")
     assert not point_21b.is_used_for_flank_protection
 
+
+def test_is_route_set():
+    topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
+    interlocking = interlockinghelper.get_interlocking(topology)
+
+    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
+    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
+    route_2 = topologyhelper.get_route_by_signal_names(topology, "60ES2", "60AS3")
+
+    # Route set with correct train
+    assert interlocking.is_route_set(route_1, "RB101") == IsRouteSetResult.ROUTE_SET_CORRECTLY
+
+    # Route not set
+    assert interlocking.is_route_set(route_2, "RB101") == IsRouteSetResult.ROUTE_NOT_SET
+
+    # Route set with wrong train
+    assert interlocking.is_route_set(route_1, "IC1234") == IsRouteSetResult.ROUTE_SET_FOR_WRONG_TRAIN
 
 def test_reset_route():
     topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
@@ -282,7 +300,6 @@ def test_consecutive_routes():
     asyncio.run(interlockinghelper.set_route(interlocking, route_2, True, "RB101"))
     route_3 = topologyhelper.get_route_by_signal_names(topology, "60AS2", "60BS3")
     asyncio.run(interlockinghelper.set_route(interlocking, route_3, True, "RB101"))
-
 
 
 class TestConsecutiveRouteDetectionWithTwoLastTracks(unittest.TestCase):

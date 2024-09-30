@@ -1,7 +1,7 @@
 from interlocking.interlockingcontroller import PointController, SignalController, TrackController, TrainDetectionController
 from interlocking.infrastructureprovider import InfrastructureProvider
 from interlocking.model import Point, Track, Signal, Route
-from interlocking.model.helper import SetRouteResult, Settings, InterlockingOperationType
+from interlocking.model.helper import SetRouteResult, Settings, InterlockingOperationType, IsRouteSetResult
 from interlockinglogicmonitor import InterlockingLogicMonitor
 from yaramo.model import Route as YaramoRoute
 import asyncio
@@ -171,6 +171,9 @@ class Interlocking(object):
         can_be_set = self.track_controller.can_route_be_set(route, train_id)
         can_be_set = can_be_set and self.point_controller.can_route_be_set(route, train_id)
         return can_be_set
+
+    def is_route_set(self, yaramo_route, train_id: str) -> IsRouteSetResult:
+        return IsRouteSetResult.ROUTE_SET_CORRECTLY
 
     def do_two_routes_collide(self, yaramo_route_1, yaramo_route_2):
         route_1 = self.get_route_from_yaramo_route(yaramo_route_1)
