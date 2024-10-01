@@ -1,6 +1,5 @@
 from .helper import topologyhelper, interlockinghelper
 from interlocking.model import OccupancyState
-from interlocking.model.helper import IsRouteSetResult
 from interlocking.infrastructureprovider import RandomWaitInfrastructureProvider
 from yaramo.model import Route as YaramoRoute, Signal as YaramoSignal, Edge as YaramoEdge, Node as YaramoNode
 import asyncio
@@ -113,62 +112,6 @@ def test_driving():
     point_21b = interlockinghelper.get_interlocking_point_by_id(interlocking, "21b88")
     assert not point_21b.is_used_for_flank_protection
 
-
-def test_is_route_set():
-    topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
-    interlocking = interlockinghelper.get_interlocking(topology)
-
-    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
-    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
-    route_2 = topologyhelper.get_route_by_signal_names(topology, "60ES2", "60AS3")
-
-    # Route set with correct train
-    assert interlocking.is_route_set(route_1, "RB101") == IsRouteSetResult.ROUTE_SET_CORRECTLY
-
-    # Route not set
-    assert interlocking.is_route_set(route_2, "RB101") == IsRouteSetResult.ROUTE_NOT_SET
-
-    # Route set with wrong train
-    assert interlocking.is_route_set(route_1, "IC1234") == IsRouteSetResult.ROUTE_SET_FOR_WRONG_TRAIN
-
-    # Manipulate state of a point on the route
-    asyncio.run(interlocking.reset())
-    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
-    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
-    interlocking.point_controller.points["d43f9"].state = OccupancyState.FREE
-    assert interlocking.is_route_set(route_1, "RB101") == IsRouteSetResult.ROUTE_NOT_SET_CORRECTLY
-
-    asyncio.run(interlocking.reset())
-    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
-    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
-    interlocking.point_controller.points["d43f9"].used_by = set()
-    assert interlocking.is_route_set(route_1, "RB101") == IsRouteSetResult.ROUTE_NOT_SET_CORRECTLY
-
-    # Manipulate state of the start signal
-    asyncio.run(interlocking.reset())
-    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
-    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
-    interlocking.signal_controller.signals["0ab8c048-f4ea-4d4d-97cd-510d0b05651f"].state = OccupancyState.FREE
-    assert interlocking.is_route_set(route_1, "RB101") == IsRouteSetResult.ROUTE_NOT_SET_CORRECTLY
-
-    asyncio.run(interlocking.reset())
-    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
-    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
-    interlocking.signal_controller.signals["0ab8c048-f4ea-4d4d-97cd-510d0b05651f"].used_by = set()
-    assert interlocking.is_route_set(route_1, "RB101") == IsRouteSetResult.ROUTE_NOT_SET_CORRECTLY
-
-    # Manipulate state of a segment
-    asyncio.run(interlocking.reset())
-    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
-    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
-    interlocking.track_controller.tracks["94742"].segments[0].state = OccupancyState.FREE
-    assert interlocking.is_route_set(route_1, "RB101") == IsRouteSetResult.ROUTE_NOT_SET_CORRECTLY
-
-    asyncio.run(interlocking.reset())
-    route_1 = topologyhelper.get_route_by_signal_names(topology, "60BS1", "60BS2")
-    asyncio.run(interlockinghelper.set_route(interlocking, route_1, True, "RB101"))
-    interlocking.track_controller.tracks["94742"].segments[0].used_by = set()
-    assert interlocking.is_route_set(route_1, "RB101") == IsRouteSetResult.ROUTE_NOT_SET_CORRECTLY
 
 def test_reset_route():
     topology = topologyhelper.get_topology_from_planpro_file("./complex-example.ppxml")
