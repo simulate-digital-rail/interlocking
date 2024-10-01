@@ -8,8 +8,8 @@ class TrackOperationsInfrastructureProvider(InfrastructureProvider):
         self.point_operations: set[tuple[Node, str]] = set()
         self.signal_operations: set[tuple[Signal, str]] = set()
 
-    async def set_signal_state(self, yaramo_signal: Signal, target_aspect: str):
-        await super().set_signal_state(yaramo_signal, target_aspect)
+    async def set_signal_aspect(self, yaramo_signal: Signal, target_aspect: str):
+        await super().set_signal_aspect(yaramo_signal, target_aspect)
         self.signal_operations.add((yaramo_signal, target_aspect))
         return True
 

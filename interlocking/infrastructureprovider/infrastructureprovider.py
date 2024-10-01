@@ -74,16 +74,16 @@ class InfrastructureProvider(ABC):
         return yaramo_signal.name in self.only_apply_for_signals or \
             (len(self.only_apply_for_signals) == 0 and yaramo_signal.name not in self.apply_for_all_signals_except)
 
-    async def call_set_signal_state(self, yaramo_signal: Signal, target_state: str):
+    async def call_set_signal_aspect(self, yaramo_signal: Signal, target_state: str):
         if self.is_signal_covered(yaramo_signal):
-            return await self.set_signal_state(yaramo_signal, target_state)
+            return await self.set_signal_aspect(yaramo_signal, target_state)
         # return True to skip this call and not prevent successfully turning of signal.
         return True
 
     @abstractmethod
-    async def set_signal_state(self, yaramo_signal: Signal, target_state: str):
-        """This method will be called when the interlocking controller wants to change the signal-state of a specific signal. 
-        `yaramo_signal` corresponds to the identifier of the signal in the yaramo model; `target_state` is one of `"halt"` and `"go"`.
+    async def set_signal_aspect(self, yaramo_signal: Signal, target_aspect: str):
+        """This method will be called when the interlocking controller wants to change the signal-aspect of a specific signal.
+        `yaramo_signal` corresponds to the identifier of the signal in the yaramo model; `target_aspect` is one of `"halt"` and `"go"`.
         """
         pass
 

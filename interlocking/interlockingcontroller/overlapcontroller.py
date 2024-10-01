@@ -15,7 +15,7 @@ class OverlapController(object):
         if overlap is None:
             raise ValueError("No reservable overlap found")
         self.reserve_segments_of_overlap(overlap, train_id)
-        success = await self.reserve_points_of_overlap(overlap, train_id)
+        success = await self.reserve_points_of_overlap(overlap, route, train_id)
         route.overlap = overlap
         return success
 
@@ -50,7 +50,7 @@ class OverlapController(object):
             segment.state = OccupancyState.RESERVED_OVERLAP
             segment.used_by.add(train_id)
 
-    async def reserve_points_of_overlap(self, overlap, train_id: str):
+    async def reserve_points_of_overlap(self, overlap, route, train_id: str):
         tasks = []
         async with asyncio.TaskGroup() as tg:
             for point in overlap.points:
@@ -69,6 +69,9 @@ class OverlapController(object):
                         raise ValueError("Overlap contains points without 2 of their tracks")
                     necessery_orientation = point.get_necessary_orientation(found_tracks[0], found_tracks[1])
                     tasks.append(tg.create_task(self.point_controller.turn_point(point, necessery_orientation)))
+                    tasks.append(tg.create_task(self.point_controller.flank_protection_controller.
+                                                add_flank_protection_for_point(point, necessery_orientation, route,
+                                                                               train_id)))
         return all(list(map(lambda task: task.result(), tasks)))
 
     def free_overlap_of_route(self, route, train_id: str):

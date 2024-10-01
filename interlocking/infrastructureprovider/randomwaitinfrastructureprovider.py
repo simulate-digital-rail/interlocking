@@ -27,14 +27,14 @@ class RandomWaitInfrastructureProvider(InfrastructureProvider):
         self.always_succeed_for = always_succeed_for
         self.always_fail_for = always_fail_for
 
-    async def set_signal_state(self, yaramo_signal: Signal, target_state):
+    async def set_signal_aspect(self, yaramo_signal: Signal, target_aspect: str):
         wait = random.sample(self.signal_time_range, 1)[0]
         await asyncio.sleep(wait)
         if (random.random() >= self.fail_probability or yaramo_signal.name in self.always_succeed_for) \
                 and yaramo_signal.name not in self.always_fail_for:
-            logging.info(f"{time.strftime('%X')} Completed setting signal {yaramo_signal.name} to {target_state} (waited {wait})")
+            logging.info(f"{time.strftime('%X')} Completed setting signal {yaramo_signal.name} to {target_aspect} (waited {wait})")
             return True
-        logging.warning(f"{time.strftime('%X')} Failed setting signal {yaramo_signal.name} to {target_state} (waited {wait})")
+        logging.warning(f"{time.strftime('%X')} Failed setting signal {yaramo_signal.name} to {target_aspect} (waited {wait})")
         return False
 
     async def turn_point(self, yaramo_point: Node, target_orientation: str):

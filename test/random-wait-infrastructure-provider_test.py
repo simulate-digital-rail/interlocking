@@ -21,11 +21,11 @@ def test_fail_probability():
     assert asyncio.run(rwip.turn_point(point, "left"))
     assert asyncio.run(rwip.turn_point(point, "left"))
 
-    assert asyncio.run(rwip.set_signal_state(signal, "go"))
-    assert asyncio.run(rwip.set_signal_state(signal, "go"))
-    assert asyncio.run(rwip.set_signal_state(signal, "go"))
-    assert asyncio.run(rwip.set_signal_state(signal, "go"))
-    assert asyncio.run(rwip.set_signal_state(signal, "go"))
+    assert asyncio.run(rwip.set_signal_aspect(signal, "go"))
+    assert asyncio.run(rwip.set_signal_aspect(signal, "go"))
+    assert asyncio.run(rwip.set_signal_aspect(signal, "go"))
+    assert asyncio.run(rwip.set_signal_aspect(signal, "go"))
+    assert asyncio.run(rwip.set_signal_aspect(signal, "go"))
 
     # No random factor, always fail
     rwip = RandomWaitInfrastructureProvider(fail_probability=1.0, signal_time_range=signal_tr,
@@ -37,11 +37,11 @@ def test_fail_probability():
     assert not asyncio.run(rwip.turn_point(point, "left"))
     assert not asyncio.run(rwip.turn_point(point, "left"))
 
-    assert not asyncio.run(rwip.set_signal_state(signal, "go"))
-    assert not asyncio.run(rwip.set_signal_state(signal, "go"))
-    assert not asyncio.run(rwip.set_signal_state(signal, "go"))
-    assert not asyncio.run(rwip.set_signal_state(signal, "go"))
-    assert not asyncio.run(rwip.set_signal_state(signal, "go"))
+    assert not asyncio.run(rwip.set_signal_aspect(signal, "go"))
+    assert not asyncio.run(rwip.set_signal_aspect(signal, "go"))
+    assert not asyncio.run(rwip.set_signal_aspect(signal, "go"))
+    assert not asyncio.run(rwip.set_signal_aspect(signal, "go"))
+    assert not asyncio.run(rwip.set_signal_aspect(signal, "go"))
 
     rwip = RandomWaitInfrastructureProvider(fail_probability=0.5, signal_time_range=signal_tr,
                                             point_turn_time_range=point_tr)

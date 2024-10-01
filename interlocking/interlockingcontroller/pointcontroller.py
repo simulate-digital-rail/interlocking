@@ -1,20 +1,27 @@
 from interlocking.model import OccupancyState, Point
+from interlocking.model.helper import Settings
+from interlocking.infrastructureprovider import InfrastructureProvider
+from .flankprotectioncontroller import FlankProtectionController
+from .signalcontroller import SignalController
 import asyncio
 import logging
 
 
 class PointController(object):
 
-    def __init__(self, infrastructure_providers, settings):
+    def __init__(self, signal_controller: SignalController, infrastructure_providers: list[InfrastructureProvider],
+                 settings: Settings):
         self.points: dict[str, Point] = {}
         self.infrastructure_providers = infrastructure_providers
         self.settings = settings
+        self.flank_protection_controller = FlankProtectionController(self, signal_controller)
 
     def reset(self):
         for point_id in self.points:
             self.points[point_id].orientation = "undefined"
             self.points[point_id].state = OccupancyState.FREE
             self.points[point_id].used_by = set()
+        self.flank_protection_controller.reset()
 
     async def set_route(self, route, train_id: str):
         tasks = []
@@ -27,6 +34,7 @@ class PointController(object):
                     if orientation == "left" or orientation == "right":
                         self.set_point_reserved(point, train_id)
                         tasks.append(tg.create_task(self.turn_point(point, orientation)))
+                        tasks.append(tg.create_task(self.flank_protection_controller.add_flank_protection_for_point(point, orientation, route, train_id)))
                     else:
                         raise ValueError("Turn should happen but is not possible")
 
@@ -50,6 +58,10 @@ class PointController(object):
         if point.orientation == orientation:
             # Everything is fine
             return True
+        if point.is_used_for_flank_protection is True:
+            logging.error(f"Can not turn point of point {point.point_id} to {orientation}, "
+                          f"since it is used for flank protection.")
+            return False
         logging.info(f"--- Move point {point.point_id} to {orientation}")
         # tasks = []
         results = []
@@ -77,6 +89,7 @@ class PointController(object):
             logging.info(f"--- Set point {point.point_id} to free")
             point.state = OccupancyState.FREE
             point.used_by.remove(train_id)
+            self.flank_protection_controller.free_flank_protection_of_point(point, point.orientation)
 
     def reset_route(self, route, train_id: str):
         for point in route.get_points_of_route():
@@ -86,4 +99,5 @@ class PointController(object):
         logging.debug("State of Points:")
         for point_id in self.points:
             point = self.points[point_id]
-            logging.debug(f"{point.point_id}: {point.state} (Orientation: {point.orientation}) (used by: {point.used_by})")
+            logging.debug(f"{point.point_id}: {point.state} (Orientation: {point.orientation}) "
+                          f"(used by: {point.used_by}) (is used for FP: {point.is_used_for_flank_protection})")

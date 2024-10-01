@@ -17,12 +17,12 @@ class Interlocking(object):
                  interlocking_logic_monitor: InterlockingLogicMonitor = None):
         if not isinstance(infrastructure_providers, list):
             infrastructure_providers = [infrastructure_providers]
-        self.infrastructure_providers = infrastructure_providers
+        self.infrastructure_providers: list[InfrastructureProvider] = infrastructure_providers
         self.settings = settings
         self.interlocking_logic_monitor = interlocking_logic_monitor
 
-        self.point_controller = PointController(self.infrastructure_providers, self.settings)
         self.signal_controller = SignalController(self.infrastructure_providers)
+        self.point_controller = PointController(self.signal_controller, self.infrastructure_providers, self.settings)
         self.track_controller = TrackController(self, self.point_controller, self.signal_controller)
         self.train_detection_controller = TrainDetectionController(self.track_controller, self.infrastructure_providers)
         self.routes: list[Route] = []
@@ -113,10 +113,12 @@ class Interlocking(object):
             next_op = await operations_queue.get()
 
     async def reset(self):
+        logging.debug("Reset Interlocking")
         self.point_controller.reset()
         self.track_controller.reset()
         await self.signal_controller.reset()
         self.active_routes = []
+        logging.debug("Reset completed")
 
     def print_state(self):
         logging.debug("##############")
@@ -151,7 +153,7 @@ class Interlocking(object):
 
         # Only set the signal to go if the points and tracks are processed
         if point_task.result() and track_task.result():
-            set_route_result.success = await self.signal_controller.set_route(route)
+            set_route_result.success = await self.signal_controller.set_route(route, train_id)
             if not set_route_result.success:
                 await self.reset_route(yaramo_route, train_id)
         else:
@@ -187,6 +189,7 @@ class Interlocking(object):
                             f"{yaramo_route.end_signal.name} was not set with the train id "
                             f"{train_id}.")
         self.track_controller.free_route(route, train_id)
+        self.signal_controller.free_route(route, train_id)
         self.active_routes.remove(route)
         route.used_by = None
         if self.interlocking_logic_monitor is not None:
@@ -204,7 +207,7 @@ class Interlocking(object):
         self.point_controller.reset_route(route, train_id)
         self.track_controller.reset_route(route, train_id)
         self.train_detection_controller.reset_track_segments_of_route(route)
-        await self.signal_controller.reset_route(route)
+        await self.signal_controller.reset_route(route, train_id)
         self.active_routes.remove(route)
         route.used_by = None
         if self.interlocking_logic_monitor is not None:
