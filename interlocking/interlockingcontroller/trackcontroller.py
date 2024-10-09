@@ -33,6 +33,30 @@ class TrackController(object):
             return False
         return self.overlap_controller.can_any_overlap_be_reserved(route, train_id)
 
+    def is_route_set(self, route, train_id: str):
+        for segment in route.get_segments_of_route():
+            if segment.state == OccupancyState.FREE:
+                return False
+            if train_id not in segment.used_by:
+                return False
+
+        # This is the redundancy, iff the method get_segments_of_route fails
+        # (e.g. returns nothing)
+        any_segment_reserved = False
+        any_segment_has_train_id = False
+        for base_track_id in self.tracks:
+            track = self.tracks[base_track_id]
+            for segment in track.segments:
+                if segment.state != OccupancyState.FREE:
+                    any_segment_reserved = True
+                if train_id in segment.used_by:
+                    any_segment_has_train_id = True
+        if not any_segment_reserved or not any_segment_has_train_id:
+            return False
+
+        # TODO: Overlap
+        return True
+
     def do_two_routes_collide(self, route_1: Route, route_2: Route):
         segments_of_route_1 = set(map(lambda seg: seg.segment_id, route_1.get_segments_of_route()))
         segments_of_route_2 = set(map(lambda seg: seg.segment_id, route_2.get_segments_of_route()))

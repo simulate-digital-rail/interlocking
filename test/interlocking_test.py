@@ -284,7 +284,6 @@ def test_consecutive_routes():
     asyncio.run(interlockinghelper.set_route(interlocking, route_3, True, "RB101"))
 
 
-
 class TestConsecutiveRouteDetectionWithTwoLastTracks(unittest.TestCase):
 
     def test_consecutive_route_detection_with_two_last_tracks(self):

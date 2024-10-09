@@ -24,6 +24,9 @@ class SignalController(object):
             route.start_signal.used_by.add(train_id)
         return result
 
+    def is_route_set(self, route, train_id: str):
+        return route.start_signal.state == OccupancyState.RESERVED and train_id in route.start_signal.used_by
+
     async def set_signal_halt(self, signal):
         return await self.set_signal_aspect(signal, "halt")
 
