@@ -14,14 +14,16 @@ class PointController(object):
         self.points: dict[str, Point] = {}
         self.infrastructure_providers = infrastructure_providers
         self.settings = settings
-        self.flank_protection_controller = FlankProtectionController(self, signal_controller)
+        if self.settings.activate_flank_protection is True:
+            self.flank_protection_controller = FlankProtectionController(self, signal_controller)
 
     def reset(self):
         for point_id in self.points:
             self.points[point_id].orientation = "undefined"
             self.points[point_id].state = OccupancyState.FREE
             self.points[point_id].used_by = set()
-        self.flank_protection_controller.reset()
+        if self.settings.activate_flank_protection is True:
+            self.flank_protection_controller.reset()
 
     async def set_route(self, route, train_id: str):
         tasks = []
@@ -34,7 +36,8 @@ class PointController(object):
                     if orientation == "left" or orientation == "right":
                         self.set_point_reserved(point, train_id)
                         tasks.append(tg.create_task(self.turn_point(point, orientation)))
-                        tasks.append(tg.create_task(self.flank_protection_controller.add_flank_protection_for_point(point, orientation, route, train_id)))
+                        if self.settings.activate_flank_protection is True:
+                            tasks.append(tg.create_task(self.flank_protection_controller.add_flank_protection_for_point(point, orientation, route, train_id)))
                     else:
                         raise ValueError("Turn should happen but is not possible")
 
@@ -89,7 +92,9 @@ class PointController(object):
             logging.info(f"--- Set point {point.point_id} to free")
             point.state = OccupancyState.FREE
             point.used_by.remove(train_id)
-            self.flank_protection_controller.free_flank_protection_of_point(point, point.orientation)
+
+            if self.settings.activate_flank_protection is True:
+                self.flank_protection_controller.free_flank_protection_of_point(point, point.orientation)
 
     def reset_route(self, route, train_id: str):
         for point in route.get_points_of_route():
