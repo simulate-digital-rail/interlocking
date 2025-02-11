@@ -52,6 +52,27 @@ class PointController(object):
             return False
         return True
 
+    def is_route_set(self, route, train_id: str):
+        for point in route.get_points_of_route():
+            if point.state == OccupancyState.FREE:
+                return False
+            if train_id not in point.used_by:
+                return False
+
+        # This is the redundancy, iff the method get_points_of_route fails
+        # (and return nothing but covers more than one track)
+        if len(route.tracks) > 1:
+            any_point_reserved = False
+            any_point_has_train_id = False
+            for point in self.points.values():
+                if point.state != OccupancyState.FREE:
+                    any_point_reserved = True
+                if train_id in point.used_by:
+                    any_point_has_train_id = True
+
+            return any_point_reserved and any_point_has_train_id
+        return True
+
     def do_two_routes_collide(self, route_1, route_2):
         points_of_route_1 = route_1.get_points_of_route()
         points_of_route_2 = route_2.get_points_of_route()
