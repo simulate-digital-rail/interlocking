@@ -1,11 +1,10 @@
-from planpro_importer.reader import PlanProReader
+from planpro_importer import PlanProVersion, import_planpro
 from railwayroutegenerator.routegenerator import RouteGenerator
 from yaramo.model import Topology, Route, Signal, Node
 
 
 def get_topology_from_planpro_file(file_name: str):
-    reader = PlanProReader(file_name)
-    topology = reader.read_topology_from_plan_pro_file()
+    topology = import_planpro(file_name, PlanProVersion.PlanPro19)
 
     # TODO: At the moment, the railway route generator can not calculate max speeds since the edges have no max speeds
     outer_station_edges = ["88d820fc-95b4-408c-b418-a516877de139", "66adf559-7dd5-487f-bad7-8e256a8a8f44",
