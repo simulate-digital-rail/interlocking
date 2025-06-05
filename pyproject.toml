@@ -1,20 +1,20 @@
 [tool.poetry]
 name = "interlocking"
-version = "4.0"
+version = "5.0"
 description = "A simple yaramo-based interlocking logic"
 authors = ["Arne Boockmeyer <arne.boockmeyer@hpi.de>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-yaramo = { git = "https://github.com/simulate-digital-rail/yaramo", tag = "v1.0" }
-planpro-importer = { git = "https://github.com/simulate-digital-rail/planpro-importer", tag = "v2.0" }
-railway-route-generator = { git = "https://github.com/simulate-digital-rail/railway-route-generator", tag = "v4.0" }
-interlocking-logic-monitor = { git = "https://github.com/simulate-digital-rail/interlocking-logic-monitor", tag = "v2.0" }
+yaramo = { git = "https://github.com/simulate-digital-rail/yaramo", branch = "yaramo2"}
+planpro-importer = { git = "https://github.com/simulate-digital-rail/planpro-importer", branch = "yaramo2"}
+railway-route-generator = { git = "https://github.com/simulate-digital-rail/railway-route-generator", branch = "yaramo2"}
+interlocking-logic-monitor = { git = "https://github.com/simulate-digital-rail/interlocking-logic-monitor", branch = "yaramo2" }
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
-planpro-importer = {git = "https://github.com/simulate-digital-rail/planpro-importer", tag = "v2.0"}
+planpro-importer = {git = "https://github.com/simulate-digital-rail/planpro-importer", branch = "yaramo2"}
 pylint = "^2.15.10"
 black = "^22.12.0"
 pre-commit = "^3.0.0"
