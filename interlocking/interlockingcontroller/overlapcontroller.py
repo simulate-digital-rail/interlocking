@@ -57,7 +57,7 @@ class OverlapController(object):
                 logging.info(f"--- Set point {point.point_id} to reserved (overlap)")
                 point.state = OccupancyState.RESERVED_OVERLAP
                 point.used_by.add(train_id)
-                if point.is_point:
+                if point.yaramo_node.is_point():
                     # Get necessary orientation
                     points_tracks = [point.head, point.left, point.right]
                     found_tracks = []

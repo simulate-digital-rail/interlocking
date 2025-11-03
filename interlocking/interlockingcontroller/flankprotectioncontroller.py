@@ -1,6 +1,6 @@
 from .signalcontroller import SignalController
 from interlocking.model import Route, Point, OccupancyState, Signal
-from yaramo.model import SignalDirection, NodeConnectionDirection
+from yaramo.model import SignalDirection, EdgeConnectionDirection
 import logging
 
 
@@ -93,14 +93,14 @@ class FlankProtectionController(object):
                     if node_b.uuid == _point.yaramo_node.uuid:
                         other_point = _point
 
-                if other_point is not None and other_point.is_point:
+                if other_point is not None and other_point.yaramo_node.is_point():
                     connection_direction = other_point.get_connection_direction_of_track(flank_protection_track)
-                    if connection_direction == NodeConnectionDirection.Spitze:
+                    if connection_direction == EdgeConnectionDirection.Spitze:
                         point_results[other_point] = None
                         signal_results, sub_point_results = self._get_flank_protection_elements_of_point(other_point, None)
                         point_results = point_results | sub_point_results
-                    elif connection_direction == NodeConnectionDirection.Links:
+                    elif connection_direction == EdgeConnectionDirection.Links:
                         point_results[other_point] = "right"
-                    elif connection_direction == NodeConnectionDirection.Rechts:
+                    elif connection_direction == EdgeConnectionDirection.Rechts:
                         point_results[other_point] = "left"
         return signal_results, point_results

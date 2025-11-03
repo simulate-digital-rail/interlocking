@@ -1,4 +1,4 @@
-from yaramo.model import NodeConnectionDirection
+from yaramo.model import EdgeConnectionDirection
 from .occupancystate import OccupancyState
 from .track import Track
 
@@ -15,25 +15,19 @@ class Point(object):
         self.head = None
         self.left = None
         self.right = None
-        self.is_point = True
 
     def connect_track(self, track):
-        if len(self.yaramo_node.connected_nodes) == 1:
+        if not self.yaramo_node.is_point():
             self.head = track
-            self.is_point = False
             return
 
-        other_node = track.right_point.yaramo_node
-        if other_node.uuid == self.yaramo_node.uuid:
-            other_node = track.left_point.yaramo_node
+        connection_direction = self.yaramo_node.get_anschluss_for_edge(track.yaramo_edge)
 
-        connection_direction = self.yaramo_node.get_anschluss_of_other(other_node)
-
-        if connection_direction == NodeConnectionDirection.Spitze:
+        if connection_direction == EdgeConnectionDirection.Spitze:
             self.head = track
-        elif connection_direction == NodeConnectionDirection.Links:
+        elif connection_direction == EdgeConnectionDirection.Links:
             self.left = track
-        elif connection_direction == NodeConnectionDirection.Rechts:
+        elif connection_direction == EdgeConnectionDirection.Rechts:
             self.right = track
 
         #connection_directions = self.yaramo_node.get_anschluss_of_other(other_node)
@@ -59,7 +53,7 @@ class Point(object):
         return track.base_track_id in all_base_ids
 
     def does_point_connect_tracks(self, track_1, track_2):
-        if not self.is_point:
+        if not self.yaramo_node.is_point():
             return False
         if track_1 is None or track_2 is None:
             return False
@@ -84,17 +78,17 @@ class Point(object):
             return "right"
         raise ValueError("None of the given edges is the head edge, orientation not possible")
 
-    def get_connection_direction_of_track(self, track: Track) -> NodeConnectionDirection:
+    def get_connection_direction_of_track(self, track: Track) -> EdgeConnectionDirection:
         if self.head.base_track_id == track.base_track_id:
-            return NodeConnectionDirection.Spitze
+            return EdgeConnectionDirection.Spitze
         if self.left.base_track_id == track.base_track_id:
-            return NodeConnectionDirection.Links
+            return EdgeConnectionDirection.Links
         if self.right.base_track_id == track.base_track_id:
-            return NodeConnectionDirection.Rechts
+            return EdgeConnectionDirection.Rechts
         raise ValueError("Given track is not connected to node")
 
     def get_possible_successors(self, track):
-        if not self.is_point:
+        if not self.yaramo_node.is_point():
             return []
         if self.head.base_track_id == track.base_track_id:
             return [self.left, self.right]
